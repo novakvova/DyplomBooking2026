@@ -75,6 +75,7 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<PhotoService>();
 
 // ---- CORS (для фронтенду, наприклад на localhost:5173/3000) ----
 builder.Services.AddCors(options =>
@@ -108,6 +109,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();

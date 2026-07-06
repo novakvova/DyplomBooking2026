@@ -3,6 +3,7 @@ using System;
 using DyplomBooking2026.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DyplomBooking2026.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260706095602_AddHousing")]
+    partial class AddHousing
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -214,38 +217,6 @@ namespace DyplomBooking2026.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("HousingBookings");
-                });
-
-            modelBuilder.Entity("DyplomBooking2026.Models.HousingPhoto", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("HousingId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsMain")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("OriginalName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HousingId");
-
-                    b.ToTable("HousingPhotos");
                 });
 
             modelBuilder.Entity("DyplomBooking2026.Models.Room", b =>
@@ -461,17 +432,6 @@ namespace DyplomBooking2026.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DyplomBooking2026.Models.HousingPhoto", b =>
-                {
-                    b.HasOne("DyplomBooking2026.Models.Housing", "Housing")
-                        .WithMany("Photos")
-                        .HasForeignKey("HousingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Housing");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -531,8 +491,6 @@ namespace DyplomBooking2026.Migrations
             modelBuilder.Entity("DyplomBooking2026.Models.Housing", b =>
                 {
                     b.Navigation("Bookings");
-
-                    b.Navigation("Photos");
                 });
 
             modelBuilder.Entity("DyplomBooking2026.Models.Room", b =>
