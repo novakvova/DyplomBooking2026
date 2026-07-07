@@ -6,6 +6,9 @@ namespace DyplomBooking2026.Models
     {
         public string? FullName { get; set; }
 
+        // Шлях до аватара, наприклад: /images/avatars/abc123.webp
+        public string? AvatarPath { get; set; }
+
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     }
 }
