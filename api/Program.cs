@@ -76,7 +76,6 @@ builder.Services
     {
         options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
         options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
-        // Після успішного Google-логіну — перенаправляє на наш callback
         options.CallbackPath = "/signin-google";
     });
 
@@ -93,8 +92,10 @@ builder.Services.AddCors(options =>
     });
 });
 
+// ---- Сервіси ----
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<PhotoService>();
+builder.Services.AddScoped<EmailService>();
 
 var app = builder.Build();
 
