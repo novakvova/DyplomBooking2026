@@ -16,6 +16,7 @@ namespace DyplomBooking2026.Data
         public DbSet<Housing> Housings { get; set; } = null!;
         public DbSet<HousingBooking> HousingBookings { get; set; } = null!;
         public DbSet<HousingPhoto> HousingPhotos { get; set; } = null!;
+        public DbSet<Payment> Payments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -49,7 +50,7 @@ namespace DyplomBooking2026.Data
                 .Property(h => h.PricePerNight)
                 .HasColumnType("decimal(10,2)");
 
-            // HousingBooking → Housing
+            // HousingBooking
             builder.Entity<HousingBooking>()
                 .HasOne(b => b.Housing)
                 .WithMany(h => h.Bookings)
@@ -62,12 +63,44 @@ namespace DyplomBooking2026.Data
                 .HasForeignKey(b => b.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // HousingPhoto → Housing
+            // HousingPhoto
             builder.Entity<HousingPhoto>()
                 .HasOne(p => p.Housing)
                 .WithMany(h => h.Photos)
                 .HasForeignKey(p => p.HousingId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Payment → User
+            builder.Entity<Payment>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Payment>()
+                .Property(p => p.Amount)
+                .HasColumnType("decimal(10,2)");
+
+            // Payment → Booking (optional)
+            builder.Entity<Payment>()
+                .HasOne(p => p.Booking)
+                .WithMany()
+                .HasForeignKey(p => p.BookingId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            // Payment → HousingBooking (optional)
+            builder.Entity<Payment>()
+                .HasOne(p => p.HousingBooking)
+                .WithMany()
+                .HasForeignKey(p => p.HousingBookingId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            // Унікальний індекс на TransactionId
+            builder.Entity<Payment>()
+                .HasIndex(p => p.TransactionId)
+                .IsUnique();
         }
     }
 }

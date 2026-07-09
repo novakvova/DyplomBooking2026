@@ -96,6 +96,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<PhotoService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<PaymentService>();
 
 var app = builder.Build();
 
