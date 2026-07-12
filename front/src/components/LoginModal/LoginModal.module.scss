@@ -1,0 +1,208 @@
+@use '../../styles/variables' as *;
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background-color: $color-backdrop;
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: $modal-width;
+  background-color: $color-white;
+  border-radius: $radius-sm;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: $color-black-500;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: $color-black-1000;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-blue-500;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 47px 30px 40px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.title {
+  margin: 0;
+  font-family: $font-family;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: $color-black-1000;
+}
+
+.subtitle {
+  margin: 0;
+  font-family: $font-family;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: $color-black-500;
+}
+
+.socialButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.socialButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+  height: 50px;
+  padding: 10px;
+  border: 1px solid $color-black-500;
+  border-radius: $radius-sm;
+  background-color: $color-white;
+  font-family: $font-family;
+  font-size: 16px;
+  font-weight: 400;
+  color: $color-black-1000;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background-color: rgba($color-black-500, 0.05);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-blue-500;
+    outline-offset: 2px;
+  }
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background-color: $color-black-500;
+}
+
+.dividerText {
+  font-family: $font-family;
+  font-size: 14px;
+  font-weight: 400;
+  color: $color-black-500;
+  white-space: nowrap;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.emailInput {
+  width: 100%;
+  height: 50px;
+  padding: 10px 16px;
+  border: 1px solid $color-black-500;
+  border-radius: $radius-sm;
+  background-color: $color-white;
+  font-family: $font-family;
+  font-size: 16px;
+  font-weight: 400;
+  color: $color-black-1000;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: $color-black-500;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $color-blue-500;
+    box-shadow: 0 0 0 2px rgba($color-blue-500, 0.2);
+  }
+}
+
+.continueButton {
+  width: 100%;
+  height: 50px;
+  padding: 10px;
+  border: none;
+  border-radius: $radius-sm;
+  background-color: $color-blue-500;
+  font-family: $font-family;
+  font-size: 20px;
+  font-weight: 600;
+  color: $color-white;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: darken($color-blue-500, 6%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-blue-500;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.iconGoogle,
+.iconFacebook {
+  flex-shrink: 0;
+}
+
+.iconGoogle {
+  width: 32px;
+  height: 32px;
+}
+
+.iconFacebook {
+  width: 35px;
+  height: 35px;
+}
