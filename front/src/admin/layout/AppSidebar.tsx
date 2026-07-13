@@ -61,35 +61,35 @@ const navItems: NavItem[] = [
   {
     icon: <DashboardIcon />,
     name: "Dashboard",
-    path: "/",
+    path: "/admin",
   },
   {
     icon: <HousingIcon />,
     name: "Житло",
-    path: "/housing",
+    path: "/admin/housing",
   },
   {
     icon: <RoomIcon />,
     name: "Кімнати",
-    path: "/rooms",
+    path: "/admin/rooms",
   },
   {
     icon: <BookingIcon />,
     name: "Бронювання",
     subItems: [
-      { name: "Кімнати", path: "/bookings" },
-      { name: "Житло", path: "/housing-bookings" },
+      { name: "Кімнати", path: "/admin/bookings" },
+      { name: "Житло", path: "/admin/housing-bookings" },
     ],
   },
   {
     icon: <PaymentIcon />,
     name: "Платежі",
-    path: "/payments",
+    path: "/admin/payments",
   },
   {
     icon: <UsersIcon />,
     name: "Користувачі",
-    path: "/users",
+    path: "/admin/users",
   },
 ];
 
@@ -156,7 +156,7 @@ const AppSidebar: React.FC = () => {
     >
       {/* Logo */}
       <div className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
-        <Link to="/" className="flex items-center gap-3">
+        <Link to="/admin" className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-lg text-white shadow">
             🏠
           </div>
