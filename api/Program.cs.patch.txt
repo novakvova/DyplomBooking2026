@@ -1,0 +1,3 @@
+// Додай у Program.cs серед реєстрації сервісів (перед var app = builder.Build()):
+
+builder.Services.AddScoped<PaymentService>();

@@ -16,7 +16,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "DyplomBooking2026 API", Version = "v1" });
-
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT токен у форматі: Bearer {token}",
@@ -25,7 +24,6 @@ builder.Services.AddSwaggerGen(options =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -38,7 +36,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// ---- Database (Neon / PostgreSQL) ----
+// ---- Database ----
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -51,8 +49,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// ---- JWT Authentication ----
+// ---- JWT + Google Authentication ----
 var jwtSection = builder.Configuration.GetSection("Jwt");
+
 builder.Services
     .AddAuthentication(options =>
     {
@@ -70,13 +69,19 @@ builder.Services
             ValidIssuer = jwtSection["Issuer"],
             ValidAudience = jwtSection["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSection["Key"] ?? throw new InvalidOperationException("Jwt:Key не налаштовано")))
+                Encoding.UTF8.GetBytes(jwtSection["Key"]!))
         };
+    })
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+        options.CallbackPath = "/signin-google";
     });
 
 builder.Services.AddAuthorization();
 
-// ---- CORS (для фронтенду, наприклад на localhost:5173/3000) ----
+// ---- CORS ----
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -87,28 +92,32 @@ builder.Services.AddCors(options =>
     });
 });
 
+// ---- Сервіси ----
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<PhotoService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<PaymentService>();
 
 var app = builder.Build();
 
-// ---- Seed бази даних при старті ----
+// ---- Seed ----
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
     await DbSeeder.SeedAsync(ctx, roleMgr, userMgr);
 }
 
-// ---- Middleware pipeline ----
+// ---- Middleware ----
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
