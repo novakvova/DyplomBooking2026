@@ -12,6 +12,7 @@ namespace DyplomBooking2026.DTOs
         public int Rooms { get; set; }
         public int MaxGuests { get; set; }
         public decimal PricePerNight { get; set; }
+        public string? MainPhotoPath { get; set; }
     }
 
     public class UpdateHousingDto
@@ -23,6 +24,7 @@ namespace DyplomBooking2026.DTOs
         public int? Rooms { get; set; }
         public int? MaxGuests { get; set; }
         public decimal? PricePerNight { get; set; }
+        public string? MainPhotoPath { get; set; }
         public bool? IsAvailable { get; set; }
     }
 
@@ -37,6 +39,7 @@ namespace DyplomBooking2026.DTOs
         public int Rooms { get; set; }
         public int MaxGuests { get; set; }
         public decimal PricePerNight { get; set; }
+        public string? MainPhotoPath { get; set; }
         public bool IsAvailable { get; set; }
         public string OwnerName { get; set; } = null!;
         public DateTime CreatedAt { get; set; }

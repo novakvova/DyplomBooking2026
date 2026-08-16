@@ -128,6 +128,41 @@ namespace DyplomBooking2026.Migrations
                     b.ToTable("Bookings");
                 });
 
+            modelBuilder.Entity("DyplomBooking2026.Models.Destination", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsPopular")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Destinations");
+                });
+
             modelBuilder.Entity("DyplomBooking2026.Models.Housing", b =>
                 {
                     b.Property<int>("Id")
@@ -342,6 +377,31 @@ namespace DyplomBooking2026.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Rooms");
+                });
+
+            modelBuilder.Entity("DyplomBooking2026.Models.UserDestinationView", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DestinationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ViewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DestinationId");
+
+                    b.ToTable("UserDestinationView");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -561,6 +621,17 @@ namespace DyplomBooking2026.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DyplomBooking2026.Models.UserDestinationView", b =>
+                {
+                    b.HasOne("DyplomBooking2026.Models.Destination", "Destination")
+                        .WithMany("UserViews")
+                        .HasForeignKey("DestinationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Destination");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -615,6 +686,11 @@ namespace DyplomBooking2026.Migrations
             modelBuilder.Entity("DyplomBooking2026.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Bookings");
+                });
+
+            modelBuilder.Entity("DyplomBooking2026.Models.Destination", b =>
+                {
+                    b.Navigation("UserViews");
                 });
 
             modelBuilder.Entity("DyplomBooking2026.Models.Housing", b =>

@@ -49,7 +49,7 @@ const LoginPage = () => {
 
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-black dark:text-white">
-            🏠 DyplomBooking
+            <img src="/public/images/logos/Logo_WayGo.png" alt="WayGo" className="h-8 w-auto"/>
           </h1>
           <p className="mt-2 text-gray-500">Адмін панель — вхід</p>
         </div>
