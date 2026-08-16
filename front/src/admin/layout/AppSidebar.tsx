@@ -158,7 +158,7 @@ const AppSidebar: React.FC = () => {
       <div className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
         <Link to="/admin" className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-lg text-white shadow">
-            🏠
+            <img src="/public/images/logos/Logo_WayGo.png" alt="WayGo" className="h-8 w-auto"/>
           </div>
           {(isExpanded || isHovered || isMobileOpen) && (
             <div>

@@ -71,6 +71,30 @@ builder.Services
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtSection["Key"]!))
         };
+
+        // Тимчасова діагностика JWT
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine("===== JWT AUTH FAILED =====");
+                Console.WriteLine(context.Exception.GetType().Name);
+                Console.WriteLine(context.Exception.Message);
+                Console.WriteLine("===========================");
+
+                return Task.CompletedTask;
+            },
+
+            OnChallenge = context =>
+            {
+                Console.WriteLine("===== JWT CHALLENGE =====");
+                Console.WriteLine($"Error: {context.Error}");
+                Console.WriteLine($"Description: {context.ErrorDescription}");
+                Console.WriteLine("=========================");
+
+                return Task.CompletedTask;
+            }
+        };
     })
     .AddGoogle(options =>
     {
@@ -107,6 +131,25 @@ using (var scope = app.Services.CreateScope())
     var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     await DbSeeder.SeedAsync(ctx, roleMgr, userMgr);
+}
+
+// ---- Seed Destinations----
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider
+        .GetRequiredService<ApplicationDbContext>();
+
+    var roleManager = scope.ServiceProvider
+        .GetRequiredService<RoleManager<IdentityRole>>();
+
+    var userManager = scope.ServiceProvider
+        .GetRequiredService<UserManager<ApplicationUser>>();
+
+    await DbSeeder.SeedAsync(
+        context,
+        roleManager,
+        userManager
+    );
 }
 
 // ---- Middleware ----

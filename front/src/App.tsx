@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import Layout from './layouts/Layout';
 
 import HomePage from './pages/HomePage';
+import HousingRegistrationPage from "./pages/HousingRegistrationPage";
 import HousingDetailPage from './pages/HousingDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from "./admin/pages/Login.tsx";
@@ -15,6 +16,9 @@ import HousingPage from "./admin/pages/Housing/HousingPage.tsx";
 import RoomsPage from "./admin/pages/Rooms/RoomsPage.tsx";
 import BookingsPage from "./admin/pages/Bookings/BookingsPage.tsx";
 import PaymentsPage from "./admin/pages/Payments/PaymentsPage.tsx";
+import BookingPage from './pages/BookingPage';
+import GoogleCallbackPage from './pages/GoogleCallbackPage';
+import WishlistPage from "./pages/WishlistPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +40,10 @@ function App() {
               <Route path="housing" element={<HomePage />} />
               <Route path="housing/:id" element={<HousingDetailPage />} />
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="booking" element={<BookingPage />} />
+              <Route path="google-callback" element={<GoogleCallbackPage />} />
+              <Route path="/housing/register" element={<HousingRegistrationPage />} />
+              <Route path="/wishlist" element={<WishlistPage />} />
             </Route>
             {/* Публічний маршрут */}
             <Route path="/login" element={<LoginPage />} />

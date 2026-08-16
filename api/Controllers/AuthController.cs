@@ -127,7 +127,14 @@ namespace DyplomBooking2026.Controllers
             if (!alreadyLinked)
                 await _userManager.AddLoginAsync(user, info);
 
-            return Ok(await BuildAuthResponse(user));
+            var response = await BuildAuthResponse(user);
+            var frontendUrl = $"http://localhost:5173/google-callback" +
+                $"?token={Uri.EscapeDataString(response.Token)}" +
+                $"&email={Uri.EscapeDataString(response.Email)}" +
+                $"&fullName={Uri.EscapeDataString(response.FullName ?? "")}" +
+                $"&roles={string.Join(",", response.Roles)}";
+
+            return Redirect(frontendUrl);
         }
 
         // ──────────────────────────────────────────

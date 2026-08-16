@@ -1,6 +1,7 @@
 using DyplomBooking2026.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace DyplomBooking2026.Data
 {
@@ -16,7 +17,9 @@ namespace DyplomBooking2026.Data
         public DbSet<Housing> Housings { get; set; } = null!;
         public DbSet<HousingBooking> HousingBookings { get; set; } = null!;
         public DbSet<HousingPhoto> HousingPhotos { get; set; } = null!;
+        public DbSet<Destination> Destinations { get; set; }
         public DbSet<Payment> Payments { get; set; } = null!;
+        public DbSet<WishlistItem> WishlistItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -101,6 +104,25 @@ namespace DyplomBooking2026.Data
             builder.Entity<Payment>()
                 .HasIndex(p => p.TransactionId)
                 .IsUnique();
+
+            // Налаштовуємо таблицю WishlistItem
+            builder.Entity<WishlistItem>()
+                .HasIndex(x => new { x.UserId, x.HousingId })
+                .IsUnique();
+
+            // Налаштовуємо зв'язок WishlistItem -> User.
+            builder.Entity<WishlistItem>()
+                .HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Налаштовуємо зв'язок WishlistItem -> Housing.
+            builder.Entity<WishlistItem>()
+                .HasOne(x => x.Housing)
+                .WithMany()
+                .HasForeignKey(x => x.HousingId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

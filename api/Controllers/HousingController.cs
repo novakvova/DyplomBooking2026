@@ -20,14 +20,15 @@ namespace DyplomBooking2026.Controllers
         }
 
         private string CurrentUserId =>
-            User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub")!;
+            User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("sub")!;
 
         // ──────────────────────────────────────────
         // HOUSING CRUD
         // ──────────────────────────────────────────
 
         /// <summary>
-        /// Отримати всі доступні об'єкти житла (публічно)
+        /// Отримати всі доступні об'єкти житла
         /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<HousingDto>>> GetAll(
@@ -37,51 +38,84 @@ namespace DyplomBooking2026.Controllers
         {
             var query = _context.Housings
                 .Include(h => h.Owner)
+                .Include(h => h.Photos)
                 .Where(h => h.IsAvailable);
 
             if (!string.IsNullOrWhiteSpace(city))
-                query = query.Where(h => h.City.ToLower().Contains(city.ToLower()));
+            {
+                query = query.Where(
+                    h => h.City.ToLower().Contains(city.ToLower())
+                );
+            }
 
             if (minGuests.HasValue)
-                query = query.Where(h => h.MaxGuests >= minGuests.Value);
+            {
+                query = query.Where(
+                    h => h.MaxGuests >= minGuests.Value
+                );
+            }
 
             if (maxPrice.HasValue)
-                query = query.Where(h => h.PricePerNight <= maxPrice.Value);
+            {
+                query = query.Where(
+                    h => h.PricePerNight <= maxPrice.Value
+                );
+            }
 
-            var result = await query.Select(h => ToDto(h)).ToListAsync();
+            var result = await query
+                .Select(h => ToDto(h))
+                .ToListAsync();
+
             return Ok(result);
         }
 
         /// <summary>
-        /// Отримати конкретний об'єкт житла за ID
+        /// Отримати житло за ID
         /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<HousingDto>> GetById(int id)
         {
             var housing = await _context.Housings
                 .Include(h => h.Owner)
+                .Include(h => h.Photos)
                 .FirstOrDefaultAsync(h => h.Id == id);
 
-            if (housing == null) return NotFound();
+            if (housing == null)
+            {
+                return NotFound();
+            }
 
             return Ok(ToDto(housing));
         }
 
         /// <summary>
-        /// Створити новий об'єкт житла (тільки Admin/Manager)
+        /// Створити нове житло
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "Admin,Manager")]
-        public async Task<ActionResult<HousingDto>> Create(CreateHousingDto dto)
+        public async Task<ActionResult<HousingDto>> Create(
+            CreateHousingDto dto)
         {
             if (dto.PricePerNight <= 0)
-                return BadRequest("Ціна за ніч повинна бути більше 0.");
+            {
+                return BadRequest(
+                    "Ціна за ніч повинна бути більше 0."
+                );
+            }
 
             if (dto.MaxGuests <= 0)
-                return BadRequest("Кількість гостей повинна бути більше 0.");
+            {
+                return BadRequest(
+                    "Кількість гостей повинна бути більше 0."
+                );
+            }
 
             if (dto.Rooms <= 0)
-                return BadRequest("Кількість кімнат повинна бути більше 0.");
+            {
+                return BadRequest(
+                    "Кількість кімнат повинна бути більше 0."
+                );
+            }
 
             var housing = new Housing
             {
@@ -97,34 +131,62 @@ namespace DyplomBooking2026.Controllers
             };
 
             _context.Housings.Add(housing);
+
             await _context.SaveChangesAsync();
 
-            await _context.Entry(housing).Reference(h => h.Owner).LoadAsync();
+            await _context.Entry(housing)
+                .Reference(h => h.Owner)
+                .LoadAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = housing.Id }, ToDto(housing));
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = housing.Id },
+                ToDto(housing)
+            );
         }
 
         /// <summary>
-        /// Оновити об'єкт житла (тільки Admin/Manager)
+        /// Оновити житло
         /// </summary>
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,Manager")]
-        public async Task<ActionResult<HousingDto>> Update(int id, UpdateHousingDto dto)
+        public async Task<ActionResult<HousingDto>> Update(
+            int id,
+            UpdateHousingDto dto)
         {
             var housing = await _context.Housings
                 .Include(h => h.Owner)
+                .Include(h => h.Photos)
                 .FirstOrDefaultAsync(h => h.Id == id);
 
-            if (housing == null) return NotFound();
+            if (housing == null)
+            {
+                return NotFound();
+            }
 
-            if (dto.Title is not null) housing.Title = dto.Title;
-            if (dto.Description is not null) housing.Description = dto.Description;
-            if (dto.Address is not null) housing.Address = dto.Address;
-            if (dto.City is not null) housing.City = dto.City;
-            if (dto.Rooms.HasValue) housing.Rooms = dto.Rooms.Value;
-            if (dto.MaxGuests.HasValue) housing.MaxGuests = dto.MaxGuests.Value;
-            if (dto.PricePerNight.HasValue) housing.PricePerNight = dto.PricePerNight.Value;
-            if (dto.IsAvailable.HasValue) housing.IsAvailable = dto.IsAvailable.Value;
+            if (dto.Title is not null)
+                housing.Title = dto.Title;
+
+            if (dto.Description is not null)
+                housing.Description = dto.Description;
+
+            if (dto.Address is not null)
+                housing.Address = dto.Address;
+
+            if (dto.City is not null)
+                housing.City = dto.City;
+
+            if (dto.Rooms.HasValue)
+                housing.Rooms = dto.Rooms.Value;
+
+            if (dto.MaxGuests.HasValue)
+                housing.MaxGuests = dto.MaxGuests.Value;
+
+            if (dto.PricePerNight.HasValue)
+                housing.PricePerNight = dto.PricePerNight.Value;
+
+            if (dto.IsAvailable.HasValue)
+                housing.IsAvailable = dto.IsAvailable.Value;
 
             await _context.SaveChangesAsync();
 
@@ -132,53 +194,82 @@ namespace DyplomBooking2026.Controllers
         }
 
         /// <summary>
-        /// Видалити (деактивувати) об'єкт житла (тільки Admin)
+        /// Деактивувати житло
         /// </summary>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var housing = await _context.Housings.FindAsync(id);
-            if (housing == null) return NotFound();
 
-            housing.IsAvailable = false; // м'яке видалення
+            if (housing == null)
+            {
+                return NotFound();
+            }
+
+            housing.IsAvailable = false;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
         // ──────────────────────────────────────────
-        // HOUSING BOOKINGS
+        // BOOKINGS
         // ──────────────────────────────────────────
 
-        /// <summary>
-        /// Забронювати житло (авторизований користувач)
-        /// </summary>
         [HttpPost("{id}/book")]
         [Authorize]
-        public async Task<ActionResult<HousingBookingDto>> Book(int id, CreateHousingBookingDto dto)
+        public async Task<ActionResult<HousingBookingDto>> Book(
+            int id,
+            CreateHousingBookingDto dto)
         {
             if (dto.CheckIn >= dto.CheckOut)
-                return BadRequest("Дата заїзду має бути раніше дати виїзду.");
+            {
+                return BadRequest(
+                    "Дата заїзду має бути раніше дати виїзду."
+                );
+            }
 
             if (dto.CheckIn < DateTime.UtcNow.Date)
-                return BadRequest("Неможливо забронювати на минулу дату.");
+            {
+                return BadRequest(
+                    "Неможливо забронювати на минулу дату."
+                );
+            }
 
-            var housing = await _context.Housings.FindAsync(id);
+            var housing =
+                await _context.Housings.FindAsync(id);
+
             if (housing == null || !housing.IsAvailable)
-                return NotFound("Житло не знайдено або недоступне.");
+            {
+                return NotFound(
+                    "Житло не знайдено або недоступне."
+                );
+            }
 
             if (dto.GuestsCount > housing.MaxGuests)
-                return BadRequest($"Максимальна кількість гостей: {housing.MaxGuests}.");
+            {
+                return BadRequest(
+                    $"Максимальна кількість гостей: {housing.MaxGuests}."
+                );
+            }
 
-            var hasConflict = await _context.HousingBookings.AnyAsync(b =>
-                b.HousingId == id &&
-                b.Status != BookingStatus.Cancelled &&
-                dto.CheckIn < b.CheckOut &&
-                dto.CheckOut > b.CheckIn);
+            var hasConflict =
+                await _context.HousingBookings.AnyAsync(
+                    b =>
+                        b.HousingId == id &&
+                        b.Status != BookingStatus.Cancelled &&
+                        dto.CheckIn < b.CheckOut &&
+                        dto.CheckOut > b.CheckIn
+                );
 
             if (hasConflict)
-                return Conflict("Житло вже заброньоване на ці дати.");
+            {
+                return Conflict(
+                    "Житло вже заброньоване на ці дати."
+                );
+            }
 
             var booking = new HousingBooking
             {
@@ -191,63 +282,80 @@ namespace DyplomBooking2026.Controllers
             };
 
             _context.HousingBookings.Add(booking);
+
             await _context.SaveChangesAsync();
 
-            await _context.Entry(booking).Reference(b => b.Housing).LoadAsync();
-            await _context.Entry(booking).Reference(b => b.User).LoadAsync();
+            await _context.Entry(booking)
+                .Reference(b => b.Housing)
+                .LoadAsync();
 
-            return CreatedAtAction(nameof(GetMyBookings), null, ToBookingDto(booking));
+            await _context.Entry(booking)
+                .Reference(b => b.User)
+                .LoadAsync();
+
+            return CreatedAtAction(
+                nameof(GetMyBookings),
+                null,
+                ToBookingDto(booking)
+            );
         }
 
-        /// <summary>
-        /// Мої бронювання житла
-        /// </summary>
         [HttpGet("bookings/my")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<HousingBookingDto>>> GetMyBookings()
+        public async Task<ActionResult<IEnumerable<HousingBookingDto>>>
+            GetMyBookings()
         {
-            var bookings = await _context.HousingBookings
-                .Include(b => b.Housing)
-                .Include(b => b.User)
-                .Where(b => b.UserId == CurrentUserId)
-                .ToListAsync();
+            var bookings =
+                await _context.HousingBookings
+                    .Include(b => b.Housing)
+                    .Include(b => b.User)
+                    .Where(b => b.UserId == CurrentUserId)
+                    .ToListAsync();
 
-            return Ok(bookings.Select(ToBookingDto));
+            return Ok(
+                bookings.Select(ToBookingDto)
+            );
         }
 
-        /// <summary>
-        /// Всі бронювання житла (тільки Admin/Manager)
-        /// </summary>
         [HttpGet("bookings")]
         [Authorize(Roles = "Admin,Manager")]
-        public async Task<ActionResult<IEnumerable<HousingBookingDto>>> GetAllBookings()
+        public async Task<ActionResult<IEnumerable<HousingBookingDto>>>
+            GetAllBookings()
         {
-            var bookings = await _context.HousingBookings
-                .Include(b => b.Housing)
-                .Include(b => b.User)
-                .ToListAsync();
+            var bookings =
+                await _context.HousingBookings
+                    .Include(b => b.Housing)
+                    .Include(b => b.User)
+                    .ToListAsync();
 
-            return Ok(bookings.Select(ToBookingDto));
+            return Ok(
+                bookings.Select(ToBookingDto)
+            );
         }
 
-        /// <summary>
-        /// Змінити статус бронювання (Admin/Manager)
-        /// </summary>
         [HttpPatch("bookings/{id}/status")]
         [Authorize(Roles = "Admin,Manager")]
-        public async Task<IActionResult> UpdateBookingStatus(int id, [FromBody] BookingStatus status)
+        public async Task<IActionResult> UpdateBookingStatus(
+            int id,
+            [FromBody] BookingStatus status)
         {
-            var booking = await _context.HousingBookings.FindAsync(id);
-            if (booking == null) return NotFound();
+            var booking =
+                await _context.HousingBookings.FindAsync(id);
+
+            if (booking == null)
+            {
+                return NotFound();
+            }
 
             booking.Status = status;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
         // ──────────────────────────────────────────
-        // Маппери
+        // MAPPERS
         // ──────────────────────────────────────────
 
         private static HousingDto ToDto(Housing h) => new()
@@ -262,24 +370,45 @@ namespace DyplomBooking2026.Controllers
             MaxGuests = h.MaxGuests,
             PricePerNight = h.PricePerNight,
             IsAvailable = h.IsAvailable,
-            OwnerName = h.Owner?.FullName ?? h.Owner?.Email ?? "—",
-            CreatedAt = h.CreatedAt
+
+            OwnerName =
+                h.Owner?.FullName
+                ?? h.Owner?.Email
+                ?? "—",
+
+            CreatedAt = h.CreatedAt,
+
+            MainPhotoPath =
+                h.Photos
+                    .FirstOrDefault(p => p.IsMain)
+                    ?.FilePath
+                ?? h.Photos
+                    .FirstOrDefault()
+                    ?.FilePath
         };
 
-        private static HousingBookingDto ToBookingDto(HousingBooking b) => new()
-        {
-            Id = b.Id,
-            HousingId = b.HousingId,
-            HousingTitle = b.Housing?.Title ?? string.Empty,
-            UserId = b.UserId,
-            UserFullName = b.User?.FullName,
-            CheckIn = b.CheckIn,
-            CheckOut = b.CheckOut,
-            GuestsCount = b.GuestsCount,
-            Status = b.Status,
-            TotalPrice = b.Housing is not null
-                ? b.Housing.PricePerNight * (decimal)(b.CheckOut - b.CheckIn).TotalDays
-                : 0
-        };
+        private static HousingBookingDto ToBookingDto(
+            HousingBooking b) => new()
+            {
+                Id = b.Id,
+                HousingId = b.HousingId,
+                HousingTitle =
+                b.Housing?.Title
+                ?? string.Empty,
+
+                UserId = b.UserId,
+                UserFullName = b.User?.FullName,
+                CheckIn = b.CheckIn,
+                CheckOut = b.CheckOut,
+                GuestsCount = b.GuestsCount,
+                Status = b.Status,
+
+                TotalPrice =
+                b.Housing is not null
+                    ? b.Housing.PricePerNight *
+                      (decimal)
+                      (b.CheckOut - b.CheckIn).TotalDays
+                    : 0
+            };
     }
 }

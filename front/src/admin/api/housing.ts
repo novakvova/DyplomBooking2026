@@ -1,19 +1,5 @@
 import apiClient from './client';
-
-export interface Housing {
-  id: number;
-  title: string;
-  description: string | null;
-  type: string;
-  address: string;
-  city: string;
-  rooms: number;
-  maxGuests: number;
-  pricePerNight: number;
-  isAvailable: boolean;
-  ownerName: string;
-  createdAt: string;
-}
+import type { Housing } from "../../types/housing";
 
 export interface CreateHousingDto {
   title: string;
