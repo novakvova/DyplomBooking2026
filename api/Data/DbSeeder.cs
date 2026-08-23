@@ -19,53 +19,32 @@ namespace DyplomBooking2026.Data
                     await roleManager.CreateAsync(new IdentityRole(role));
             }
 
-            // ── 2. Адмін ─────────────────────────────────────────────────────
-            ApplicationUser? admin = await userManager.FindByEmailAsync("admin@booking.com") ?? throw new Exception("Admin user not found for housing seed");
-            if (admin == null)
-            {
-                admin = new ApplicationUser
-                {
-                    UserName = "admin@booking.com",
-                    Email = "admin@booking.com",
-                    FullName = "Admin User",
-                    EmailConfirmed = true
-                };
-                var result = await userManager.CreateAsync(admin, "Admin123!");
-                if (result.Succeeded)
-                    await userManager.AddToRoleAsync(admin, "Admin");
-            }
+            // ── 2–4. Системні користувачі ───────────────────────────────────
+            // Створюємо користувачів, якщо їх ще немає,
+            // і гарантуємо, що кожен має потрібну роль.
+            var admin = await EnsureUserAsync(
+                userManager,
+                email: "admin@booking.com",
+                fullName: "Admin User",
+                password: "Admin123!",
+                role: "Admin"
+            );
 
-            // ── 3. Менеджер ──────────────────────────────────────────────────
-            ApplicationUser? manager = await userManager.FindByEmailAsync("manager@booking.com");
-            if (manager == null)
-            {
-                manager = new ApplicationUser
-                {
-                    UserName = "manager@booking.com",
-                    Email = "manager@booking.com",
-                    FullName = "Manager User",
-                    EmailConfirmed = true
-                };
-                var result = await userManager.CreateAsync(manager, "Manager123!");
-                if (result.Succeeded)
-                    await userManager.AddToRoleAsync(manager, "Manager");
-            }
+            var manager = await EnsureUserAsync(
+                userManager,
+                email: "manager@booking.com",
+                fullName: "Manager User",
+                password: "Manager123!",
+                role: "Manager"
+            );
 
-            // ── 4. Клієнт ────────────────────────────────────────────────────
-            ApplicationUser? client = await userManager.FindByEmailAsync("client@booking.com");
-            if (client == null)
-            {
-                client = new ApplicationUser
-                {
-                    UserName = "client@booking.com",
-                    Email = "client@booking.com",
-                    FullName = "Client User",
-                    EmailConfirmed = true
-                };
-                var result = await userManager.CreateAsync(client, "Client123!");
-                if (result.Succeeded)
-                    await userManager.AddToRoleAsync(client, "Client");
-            }
+            var client = await EnsureUserAsync(
+                userManager,
+                email: "client@booking.com",
+                fullName: "Client User",
+                password: "Client123!",
+                role: "Client"
+            );
 
             // ── 5. Кімнати ───────────────────────────────────────────────────
             if (!context.Rooms.Any())
@@ -102,9 +81,6 @@ namespace DyplomBooking2026.Data
             // ── 6. Житло (Housing) ────────────────────────────────────────────
             if (!context.Housings.Any())
             {
-                // Перезавантажуємо admin після SaveChanges щоб мати актуальний Id
-                admin = await userManager.FindByEmailAsync("admin@booking.com");
-
                 var housings = new List<Housing>
                 {
                     new Housing
@@ -118,7 +94,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 2,
                         PricePerNight = 1200,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -131,7 +107,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 1800,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -144,7 +120,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 8,
                         PricePerNight = 3500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -157,7 +133,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 5,
                         PricePerNight = 2200,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -170,7 +146,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 10,
                         PricePerNight = 6000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -183,7 +159,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 2,
                         PricePerNight = 600,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -196,7 +172,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 3,
                         PricePerNight = 1500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -209,7 +185,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 6,
                         PricePerNight = 2800,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -222,7 +198,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 4500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -235,7 +211,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 3,
                         PricePerNight = 3200,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -248,7 +224,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 2,
                         PricePerNight = 2800,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -261,7 +237,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 3000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -274,7 +250,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 8,
                         PricePerNight = 4200,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -287,7 +263,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 2,
                         PricePerNight = 5000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -300,7 +276,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 3800,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -313,7 +289,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 6,
                         PricePerNight = 4500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -326,7 +302,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 5,
                         PricePerNight = 7500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -339,7 +315,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 9000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -352,7 +328,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 2,
                         PricePerNight = 3500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -365,7 +341,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 6500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -378,7 +354,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 10,
                         PricePerNight = 5500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -391,7 +367,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 2300,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -404,7 +380,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 1800,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -417,7 +393,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 8,
                         PricePerNight = 7000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -430,7 +406,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 5000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -443,7 +419,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 10,
                         PricePerNight = 5500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -456,7 +432,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 1600,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -469,7 +445,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 6,
                         PricePerNight = 6000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -482,7 +458,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 3500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -495,7 +471,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 8,
                         PricePerNight = 12000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -508,7 +484,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 8000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -521,7 +497,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 6,
                         PricePerNight = 3000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -534,7 +510,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 3300,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -547,7 +523,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 8,
                         PricePerNight = 5000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -560,7 +536,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 8500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -573,7 +549,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 2,
                         PricePerNight = 6500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -586,7 +562,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 6000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -599,7 +575,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 10,
                         PricePerNight = 9000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -612,7 +588,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 1400,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -625,7 +601,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 6,
                         PricePerNight = 2500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -638,7 +614,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 4000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -651,7 +627,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 6,
                         PricePerNight = 4500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -664,7 +640,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 1700,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -677,7 +653,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 3,
                         PricePerNight = 5200,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -690,7 +666,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 8,
                         PricePerNight = 5500,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -703,7 +679,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 2,
                         PricePerNight = 2600,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -716,7 +692,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 6,
                         PricePerNight = 3000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -729,7 +705,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 4,
                         PricePerNight = 1800,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -742,7 +718,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 6,
                         PricePerNight = 4200,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     },
                     new Housing
                     {
@@ -755,7 +731,7 @@ namespace DyplomBooking2026.Data
                         MaxGuests = 8,
                         PricePerNight = 15000,
                         IsAvailable = true,
-                        OwnerId = admin!.Id
+                        OwnerId = admin.Id
                     }
                 };
 
@@ -765,7 +741,7 @@ namespace DyplomBooking2026.Data
                 // Папка з фотографіями
                 var imagesFolder = Path.Combine(
                     Directory.GetCurrentDirectory(),
-                    "../front/public/images/apartments"
+                    "wwwroot/images/apartments"
                 );
 
                 // Отримуємо всі фото з папки
@@ -836,10 +812,16 @@ namespace DyplomBooking2026.Data
             {
                 var destinations = new List<Destination>
             {
+                // =========================
+                // Європа / світ
+                // =========================
+
                 new Destination
                 {
+                    Slug = "paris",
                     City = "paris",
                     Country = "france",
+                    CountryCode = "FR",
                     Description = "The city of love, art and iconic architecture.",
                     ImagePath = "/images/cities/paris.jpg",
                     IsPopular = true,
@@ -848,8 +830,10 @@ namespace DyplomBooking2026.Data
 
                 new Destination
                 {
+                    Slug = "london",
                     City = "london",
                     Country = "united kingdom",
+                    CountryCode = "GB",
                     Description = "A historic city with famous landmarks and modern culture.",
                     ImagePath = "/images/cities/london.jpg",
                     IsPopular = true,
@@ -857,431 +841,519 @@ namespace DyplomBooking2026.Data
                 },
 
                 new Destination
-                    {
-                        City = "rome",
-                        Country = "italy",
-                        Description = "Ancient history, amazing cuisine and unforgettable places.",
-                        ImagePath = "/images/cities/rome.jpg",
-                        IsPopular = true,
-                        ViewCount = 48000
-                    },
+                {
+                    Slug = "rome",
+                    City = "rome",
+                    Country = "italy",
+                    CountryCode = "IT",
+                    Description = "Ancient history, amazing cuisine and unforgettable places.",
+                    ImagePath = "/images/cities/rome.jpg",
+                    IsPopular = true,
+                    ViewCount = 48000
+                },
 
-                    new Destination
-                    {
-                        City = "barcelona",
-                        Country = "spain",
-                        Description = "Beautiful architecture, beaches and Mediterranean atmosphere.",
-                        ImagePath = "/images/cities/barcelona.jpg",
-                        IsPopular = true,
-                        ViewCount = 47000
-                    },
+                new Destination
+                {
+                    Slug = "barcelona",
+                    City = "barcelona",
+                    Country = "spain",
+                    CountryCode = "ES",
+                    Description = "Beautiful architecture, beaches and Mediterranean atmosphere.",
+                    ImagePath = "/images/cities/barcelona.jpg",
+                    IsPopular = true,
+                    ViewCount = 47000
+                },
 
-                    new Destination
-                    {
-                        City = "berlin",
-                        Country = "germany",
-                        Description = "A modern European capital full of history and creativity.",
-                        ImagePath = "/images/cities/berlin.jpg",
-                        IsPopular = true,
-                        ViewCount = 45000
-                    },
+                new Destination
+                {
+                    Slug = "berlin",
+                    City = "berlin",
+                    Country = "germany",
+                    CountryCode = "DE",
+                    Description = "A modern European capital full of history and creativity.",
+                    ImagePath = "/images/cities/berlin.jpg",
+                    IsPopular = true,
+                    ViewCount = 45000
+                },
 
-                    new Destination
-                    {
-                        City = "vienna",
-                        Country = "austria",
-                        Description = "Elegant architecture, music and imperial heritage.",
-                        ImagePath = "/images/cities/vienna.jpg",
-                        IsPopular = true,
-                        ViewCount = 43000
-                    },
+                new Destination
+                {
+                    Slug = "vienna",
+                    City = "vienna",
+                    Country = "austria",
+                    CountryCode = "AT",
+                    Description = "Elegant architecture, music and imperial heritage.",
+                    ImagePath = "/images/cities/vienna.jpg",
+                    IsPopular = true,
+                    ViewCount = 43000
+                },
 
-                    new Destination
-                    {
-                        City = "budapest",
-                        Country = "hungary",
-                        Description = "Beautiful city with thermal baths and stunning views.",
-                        ImagePath = "/images/cities/budapest.jpg",
-                        IsPopular = true,
-                        ViewCount = 42000
-                    },
+                new Destination
+                {
+                    Slug = "budapest",
+                    City = "budapest",
+                    Country = "hungary",
+                    CountryCode = "HU",
+                    Description = "Beautiful city with thermal baths and stunning views.",
+                    ImagePath = "/images/cities/budapest.jpg",
+                    IsPopular = true,
+                    ViewCount = 42000
+                },
 
-                    new Destination
-                    {
-                        City = "prague",
-                        Country = "czech republic",
-                        Description = "A magical city with castles and historic streets.",
-                        ImagePath = "/images/cities/prague.jpg",
-                        IsPopular = true,
-                        ViewCount = 41000
-                    },
+                new Destination
+                {
+                    Slug = "prague",
+                    City = "prague",
+                    Country = "czech republic",
+                    CountryCode = "CZ",
+                    Description = "A magical city with castles and historic streets.",
+                    ImagePath = "/images/cities/prague.jpg",
+                    IsPopular = true,
+                    ViewCount = 41000
+                },
 
-                    new Destination
-                    {
-                        City = "amsterdam",
-                        Country = "netherlands",
-                        Description = "Canals, museums and unique European atmosphere.",
-                        ImagePath = "/images/cities/amsterdam.jpg",
-                        IsPopular = true,
-                        ViewCount = 40000
-                    },
+                new Destination
+                {
+                    Slug = "amsterdam",
+                    City = "amsterdam",
+                    Country = "netherlands",
+                    CountryCode = "NL",
+                    Description = "Canals, museums and unique European atmosphere.",
+                    ImagePath = "/images/cities/amsterdam.jpg",
+                    IsPopular = true,
+                    ViewCount = 40000
+                },
 
-                    new Destination
-                    {
-                        City = "lisbon",
-                        Country = "portugal",
-                        Description = "Sunny streets, ocean views and colorful neighborhoods.",
-                        ImagePath = "/images/cities/lisbon.jpg",
-                        IsPopular = true,
-                        ViewCount = 39000
-                    },
+                new Destination
+                {
+                    Slug = "lisbon",
+                    City = "lisbon",
+                    Country = "portugal",
+                    CountryCode = "PT",
+                    Description = "Sunny streets, ocean views and colorful neighborhoods.",
+                    ImagePath = "/images/cities/lisbon.jpg",
+                    IsPopular = true,
+                    ViewCount = 39000
+                },
 
-                    new Destination
-                    {
-                        City = "madrid",
-                        Country = "spain",
-                        Description = "A vibrant capital with culture, food and nightlife.",
-                        ImagePath = "/images/cities/madrid.jpg",
-                        IsPopular = true,
-                        ViewCount = 38000
-                    },
+                new Destination
+                {
+                    Slug = "madrid",
+                    City = "madrid",
+                    Country = "spain",
+                    CountryCode = "ES",
+                    Description = "A vibrant capital with culture, food and nightlife.",
+                    ImagePath = "/images/cities/madrid.jpg",
+                    IsPopular = true,
+                    ViewCount = 38000
+                },
 
-                    new Destination
-                    {
-                        City = "athens",
-                        Country = "greece",
-                        Description = "Ancient monuments combined with modern city life.",
-                        ImagePath = "/images/cities/athens.jpg",
-                        IsPopular = true,
-                        ViewCount = 37000
-                    },
+                new Destination
+                {
+                    Slug = "athens",
+                    City = "athens",
+                    Country = "greece",
+                    CountryCode = "GR",
+                    Description = "Ancient monuments combined with modern city life.",
+                    ImagePath = "/images/cities/athens.jpg",
+                    IsPopular = true,
+                    ViewCount = 37000
+                },
 
-                    new Destination
-                    {
-                        City = "zurich",
-                        Country = "switzerland",
-                        Description = "A clean and beautiful city surrounded by nature.",
-                        ImagePath = "/images/cities/zurich.jpg",
-                        IsPopular = true,
-                        ViewCount = 36000
-                    },
+                new Destination
+                {
+                    Slug = "zurich",
+                    City = "zurich",
+                    Country = "switzerland",
+                    CountryCode = "CH",
+                    Description = "A clean and beautiful city surrounded by nature.",
+                    ImagePath = "/images/cities/zurich.jpg",
+                    IsPopular = true,
+                    ViewCount = 36000
+                },
 
-                    new Destination
-                    {
-                        City = "oslo",
-                        Country = "norway",
-                        Description = "Modern city surrounded by mountains and fjords.",
-                        ImagePath = "/images/cities/oslo.jpg",
-                        IsPopular = true,
-                        ViewCount = 34000
-                    },
+                new Destination
+                {
+                    Slug = "oslo",
+                    City = "oslo",
+                    Country = "norway",
+                    CountryCode = "NO",
+                    Description = "Modern city surrounded by mountains and fjords.",
+                    ImagePath = "/images/cities/oslo.jpg",
+                    IsPopular = true,
+                    ViewCount = 34000
+                },
 
-                    new Destination
-                    {
-                        City = "copenhagen",
-                        Country = "denmark",
-                        Description = "A stylish Nordic city with cozy atmosphere.",
-                        ImagePath = "/images/cities/copenhagen.jpg",
-                        IsPopular = true,
-                        ViewCount = 33000
-                    },
+                new Destination
+                {
+                    Slug = "copenhagen",
+                    City = "copenhagen",
+                    Country = "denmark",
+                    CountryCode = "DK",
+                    Description = "A stylish Nordic city with cozy atmosphere.",
+                    ImagePath = "/images/cities/copenhagen.jpg",
+                    IsPopular = true,
+                    ViewCount = 33000
+                },
 
-                    new Destination
-                    {
-                        City = "helsinki",
-                        Country = "finland",
-                        Description = "A peaceful Nordic capital with unique design.",
-                        ImagePath = "/images/cities/helsinki.jpg",
-                        IsPopular = true,
-                        ViewCount = 32000
-                    },
+                new Destination
+                {
+                    Slug = "helsinki",
+                    City = "helsinki",
+                    Country = "finland",
+                    CountryCode = "FI",
+                    Description = "A peaceful Nordic capital with unique design.",
+                    ImagePath = "/images/cities/helsinki.jpg",
+                    IsPopular = true,
+                    ViewCount = 32000
+                },
 
-                    new Destination
-                    {
-                        City = "warsaw",
-                        Country = "poland",
-                        Description = "A dynamic city combining history and modern life.",
-                        ImagePath = "/images/cities/warsaw.jpg",
-                        IsPopular = true,
-                        ViewCount = 31000
-                    },
+                new Destination
+                {
+                    Slug = "warsaw",
+                    City = "warsaw",
+                    Country = "poland",
+                    CountryCode = "PL",
+                    Description = "A dynamic city combining history and modern life.",
+                    ImagePath = "/images/cities/warsaw.jpg",
+                    IsPopular = true,
+                    ViewCount = 31000
+                },
 
-                    new Destination
-                    {
-                        City = "krakow",
-                        Country = "poland",
-                        Description = "Historic streets, castles and traditional culture.",
-                        ImagePath = "/images/cities/krakow.jpg",
-                        IsPopular = true,
-                        ViewCount = 30000
-                    },
+                new Destination
+                {
+                    Slug = "krakow",
+                    City = "krakow",
+                    Country = "poland",
+                    CountryCode = "PL",
+                    Description = "Historic streets, castles and traditional culture.",
+                    ImagePath = "/images/cities/krakow.jpg",
+                    IsPopular = true,
+                    ViewCount = 30000
+                },
 
-                    new Destination
-                    {
-                        City = "munich",
-                        Country = "germany",
-                        Description = "Bavarian traditions, architecture and festivals.",
-                        ImagePath = "/images/cities/munich.jpg",
-                        IsPopular = true,
-                        ViewCount = 29000
-                    },
+                new Destination
+                {
+                    Slug = "munich",
+                    City = "munich",
+                    Country = "germany",
+                    CountryCode = "DE",
+                    Description = "Bavarian traditions, architecture and festivals.",
+                    ImagePath = "/images/cities/munich.jpg",
+                    IsPopular = true,
+                    ViewCount = 29000
+                },
 
-                    new Destination
-                    {
-                        City = "venice",
-                        Country = "italy",
-                        Description = "A unique city of canals and romantic views.",
-                        ImagePath = "/images/cities/venice.jpg",
-                        IsPopular = true,
-                        ViewCount = 28000
-                    },
+                new Destination
+                {
+                    Slug = "venice",
+                    City = "venice",
+                    Country = "italy",
+                    CountryCode = "IT",
+                    Description = "A unique city of canals and romantic views.",
+                    ImagePath = "/images/cities/venice.jpg",
+                    IsPopular = true,
+                    ViewCount = 28000
+                },
 
-                    new Destination
-                    {
-                        City = "florence",
-                        Country = "italy",
-                        Description = "The birthplace of Renaissance art and culture.",
-                        ImagePath = "/images/cities/florence.jpg",
-                        IsPopular = true,
-                        ViewCount = 27000
-                    },
+                new Destination
+                {
+                    Slug = "florence",
+                    City = "florence",
+                    Country = "italy",
+                    CountryCode = "IT",
+                    Description = "The birthplace of Renaissance art and culture.",
+                    ImagePath = "/images/cities/florence.jpg",
+                    IsPopular = true,
+                    ViewCount = 27000
+                },
 
-                    new Destination
-                    {
-                        City = "dubrovnik",
-                        Country = "croatia",
-                        Description = "A beautiful coastal city with historic walls.",
-                        ImagePath = "/images/cities/dubrovnik.jpg",
-                        IsPopular = true,
-                        ViewCount = 26000
-                    },
+                new Destination
+                {
+                    Slug = "dubrovnik",
+                    City = "dubrovnik",
+                    Country = "croatia",
+                    CountryCode = "HR",
+                    Description = "A beautiful coastal city with historic walls.",
+                    ImagePath = "/images/cities/dubrovnik.jpg",
+                    IsPopular = true,
+                    ViewCount = 26000
+                },
 
-                    new Destination
-                    {
-                        City = "istanbul",
-                        Country = "turkey",
-                        Description = "A city connecting Europe and Asia.",
-                        ImagePath = "/images/cities/istanbul.jpg",
-                        IsPopular = true,
-                        ViewCount = 25000
-                    },
+                new Destination
+                {
+                    Slug = "istanbul",
+                    City = "istanbul",
+                    Country = "turkey",
+                    CountryCode = "TR",
+                    Description = "A city connecting Europe and Asia.",
+                    ImagePath = "/images/cities/istanbul.jpg",
+                    IsPopular = true,
+                    ViewCount = 25000
+                },
 
-                    new Destination
-                    {
-                        City = "new york",
-                        Country = "usa",
-                        Description = "A global city famous for culture and entertainment.",
-                        ImagePath = "/images/cities/new-york.jpg",
-                        IsPopular = true,
-                        ViewCount = 60000
-                    },
+                new Destination
+                {
+                    Slug = "new-york",
+                    City = "new york",
+                    Country = "usa",
+                    CountryCode = "US",
+                    Description = "A global city famous for culture and entertainment.",
+                    ImagePath = "/images/cities/new-york.jpg",
+                    IsPopular = true,
+                    ViewCount = 60000
+                },
 
-                    // =========================
-                    // Україна
-                    // =========================
 
-                    new Destination
-                    {
-                        City = "kyiv",
-                        Country = "ukraine",
-                        Description = "The capital of Ukraine with historic landmarks, vibrant culture and modern city life.",
-                        ImagePath = "/images/cities/kyiv.jpg",
-                        IsPopular = true,
-                        ViewCount = 60000
-                    },
+                // =========================
+                // Україна
+                // =========================
 
-                    new Destination
-                    {
-                        City = "lviv",
-                        Country = "ukraine",
-                        Description = "A historic city famous for its architecture, coffee culture and charming old town.",
-                        ImagePath = "/images/cities/lviv.jpg",
-                        IsPopular = true,
-                        ViewCount = 55000
-                    },
+                new Destination
+                {
+                    Slug = "kyiv",
+                    City = "kyiv",
+                    Country = "ukraine",
+                    CountryCode = "UA",
+                    Description = "The capital of Ukraine with historic landmarks, vibrant culture and modern city life.",
+                    ImagePath = "/images/cities/kyiv.jpg",
+                    IsPopular = true,
+                    ViewCount = 60000
+                },
 
-                    new Destination
-                    {
-                        City = "odesa",
-                        Country = "ukraine",
-                        Description = "A Black Sea city known for its architecture, seaside atmosphere and lively streets.",
-                        ImagePath = "/images/cities/odesa.jpg",
-                        IsPopular = true,
-                        ViewCount = 48000
-                    },
+                new Destination
+                {
+                    Slug = "lviv",
+                    City = "lviv",
+                    Country = "ukraine",
+                    CountryCode = "UA",
+                    Description = "A historic city famous for its architecture, coffee culture and charming old town.",
+                    ImagePath = "/images/cities/lviv.jpg",
+                    IsPopular = true,
+                    ViewCount = 55000
+                },
 
-                    new Destination
-                    {
-                        City = "kharkiv",
-                        Country = "ukraine",
-                        Description = "One of Ukraine's largest cities, known for its architecture, parks and cultural life.",
-                        ImagePath = "/images/cities/kharkiv.jpg",
-                        IsPopular = false,
-                        ViewCount = 30000
-                    },
+                new Destination
+                {
+                    Slug = "odesa",
+                    City = "odesa",
+                    Country = "ukraine",
+                    CountryCode = "UA",
+                    Description = "A Black Sea city known for its architecture, seaside atmosphere and lively streets.",
+                    ImagePath = "/images/cities/odesa.jpg",
+                    IsPopular = true,
+                    ViewCount = 48000
+                },
 
-                    new Destination
-                    {
-                        City = "dnipro",
-                        Country = "ukraine",
-                        Description = "A major Ukrainian city located along the Dnipro River with a modern waterfront.",
-                        ImagePath = "/images/cities/dnipro.jpg",
-                        IsPopular = false,
-                        ViewCount = 28000
-                    },
+                new Destination
+                {
+                    Slug = "kharkiv",
+                    City = "kharkiv",
+                    Country = "ukraine",
+                    CountryCode = "UA",
+                    Description = "One of Ukraine's largest cities, known for its architecture, parks and cultural life.",
+                    ImagePath = "/images/cities/kharkiv.jpg",
+                    IsPopular = false,
+                    ViewCount = 30000
+                },
 
-                    new Destination
-                    {
-                        City = "ternopil",
-                        Country = "ukraine",
-                        Description = "A cozy western Ukrainian city known for its large lake, parks and relaxed atmosphere.",
-                        ImagePath = "/images/cities/ternopil.jpg",
-                        IsPopular = false,
-                        ViewCount = 20000
-                    },
+                new Destination
+                {
+                    Slug = "dnipro",
+                    City = "dnipro",
+                    Country = "ukraine",
+                    CountryCode = "UA",
+                    Description = "A major Ukrainian city located along the Dnipro River with a modern waterfront.",
+                    ImagePath = "/images/cities/dnipro.jpg",
+                    IsPopular = false,
+                    ViewCount = 28000
+                },
 
-                    new Destination
-                    {
-                        City = "lutsk",
-                        Country = "ukraine",
-                        Description = "A historic city in western Ukraine known for Lubart's Castle and its charming old town.",
-                        ImagePath = "/images/cities/lutsk.jpg",
-                        IsPopular = false,
-                        ViewCount = 19000
-                    },
+                new Destination
+                {
+                    Slug = "ternopil",
+                    City = "ternopil",
+                    Country = "ukraine",
+                    CountryCode = "UA",
+                    Description = "A cozy western Ukrainian city known for its large lake, parks and relaxed atmosphere.",
+                    ImagePath = "/images/cities/ternopil.jpg",
+                    IsPopular = false,
+                    ViewCount = 20000
+                },
 
-                    new Destination
-                    {
-                        City = "rivne",
-                        Country = "ukraine",
-                        Description = "A welcoming western Ukrainian city with green parks, cultural attractions and a relaxed atmosphere.",
-                        ImagePath = "/images/cities/rivne.jpg",
-                        IsPopular = false,
-                        ViewCount = 18000
-                    },
+                new Destination
+                {
+                    Slug = "lutsk",
+                    City = "lutsk",
+                    Country = "ukraine",
+                    CountryCode = "UA",
+                    Description = "A historic city in western Ukraine known for Lubart's Castle and its charming old town.",
+                    ImagePath = "/images/cities/lutsk.jpg",
+                    IsPopular = false,
+                    ViewCount = 19000
+                },
 
-                    new Destination
-                    {
-                        City = "ivano-frankivsk",
-                        Country = "ukraine",
-                        Description = "A cozy western Ukrainian city and a popular gateway to the Carpathian Mountains.",
-                        ImagePath = "/images/cities/ivano-frankivsk.jpg",
-                        IsPopular = true,
-                        ViewCount = 24000
-                    },
+                new Destination
+                {
+                    Slug = "rivne",
+                    City = "rivne",
+                    Country = "ukraine",
+                    CountryCode = "UA",
+                    Description = "A welcoming western Ukrainian city with green parks, cultural attractions and a relaxed atmosphere.",
+                    ImagePath = "/images/cities/rivne.jpg",
+                    IsPopular = false,
+                    ViewCount = 18000
+                },
 
-                    new Destination
-                    {
-                        City = "vinnytsia",
-                        Country = "ukraine",
-                        Description = "A comfortable central Ukrainian city known for its parks, riverfront and historic architecture.",
-                        ImagePath = "/images/cities/vinnytsia.jpg",
-                        IsPopular = false,
-                        ViewCount = 22000
-                    },
+                new Destination
+                {
+                    Slug = "ivano-frankivsk",
+                    City = "ivano-frankivsk",
+                    Country = "ukraine",
+                    CountryCode = "UA",
+                    Description = "A cozy western Ukrainian city and a popular gateway to the Carpathian Mountains.",
+                    ImagePath = "/images/cities/ivano-frankivsk.jpg",
+                    IsPopular = true,
+                    ViewCount = 24000
+                },
 
-                    // =========================
-                    // Швеція
-                    // =========================
+                new Destination
+                {
+                    Slug = "vinnytsia",
+                    City = "vinnytsia",
+                    Country = "ukraine",
+                    CountryCode = "UA",
+                    Description = "A comfortable central Ukrainian city known for its parks, riverfront and historic architecture.",
+                    ImagePath = "/images/cities/vinnytsia.jpg",
+                    IsPopular = false,
+                    ViewCount = 22000
+                },
 
-                    new Destination
-                    {
-                        City = "stockholm",
-                        Country = "sweden",
-                        Description = "The capital of Sweden, spread across islands and known for its historic old town and waterfront.",
-                        ImagePath = "/images/cities/stockholm.jpg",
-                        IsPopular = true,
-                        ViewCount = 60000
-                    },
 
-                    new Destination
-                    {
-                        City = "gothenburg",
-                        Country = "sweden",
-                        Description = "A lively west coast city known for its canals, seafood, culture and nearby archipelago.",
-                        ImagePath = "/images/cities/gothenburg.jpg",
-                        IsPopular = true,
-                        ViewCount = 45000
-                    },
+                // =========================
+                // Швеція
+                // =========================
 
-                    new Destination
-                    {
-                        City = "malmo",
-                        Country = "sweden",
-                        Description = "A modern southern Swedish city known for its parks, architecture and proximity to Copenhagen.",
-                        ImagePath = "/images/cities/malmo.jpg",
-                        IsPopular = true,
-                        ViewCount = 42000
-                    },
+                new Destination
+                {
+                    Slug = "stockholm",
+                    City = "stockholm",
+                    Country = "sweden",
+                    CountryCode = "SE",
+                    Description = "The capital of Sweden, spread across islands and known for its historic old town and waterfront.",
+                    ImagePath = "/images/cities/stockholm.jpg",
+                    IsPopular = true,
+                    ViewCount = 60000
+                },
 
-                    new Destination
-                    {
-                        City = "uppsala",
-                        Country = "sweden",
-                        Description = "A historic university city known for Uppsala Cathedral, museums and academic atmosphere.",
-                        ImagePath = "/images/cities/uppsala.jpg",
-                        IsPopular = false,
-                        ViewCount = 25000
-                    },
+                new Destination
+                {
+                    Slug = "gothenburg",
+                    City = "gothenburg",
+                    Country = "sweden",
+                    CountryCode = "SE",
+                    Description = "A lively west coast city known for its canals, seafood, culture and nearby archipelago.",
+                    ImagePath = "/images/cities/gothenburg.jpg",
+                    IsPopular = true,
+                    ViewCount = 45000
+                },
 
-                    new Destination
-                    {
-                        City = "lund",
-                        Country = "sweden",
-                        Description = "A charming university city with medieval history, cobbled streets and a famous cathedral.",
-                        ImagePath = "/images/cities/lund.jpg",
-                        IsPopular = false,
-                        ViewCount = 22000
-                    },
+                new Destination
+                {
+                    Slug = "malmo",
+                    City = "malmo",
+                    Country = "sweden",
+                    CountryCode = "SE",
+                    Description = "A modern southern Swedish city known for its parks, architecture and proximity to Copenhagen.",
+                    ImagePath = "/images/cities/malmo.jpg",
+                    IsPopular = true,
+                    ViewCount = 42000
+                },
 
-                    new Destination
-                    {
-                        City = "kiruna",
-                        Country = "sweden",
-                        Description = "A northern Arctic city popular for winter adventures, northern lights and Lapland landscapes.",
-                        ImagePath = "/images/cities/kiruna.jpg",
-                        IsPopular = true,
-                        ViewCount = 30000
-                    },
+                new Destination
+                {
+                    Slug = "uppsala",
+                    City = "uppsala",
+                    Country = "sweden",
+                    CountryCode = "SE",
+                    Description = "A historic university city known for Uppsala Cathedral, museums and academic atmosphere.",
+                    ImagePath = "/images/cities/uppsala.jpg",
+                    IsPopular = false,
+                    ViewCount = 25000
+                },
 
-                    new Destination
-                    {
-                        City = "linkoping",
-                        Country = "sweden",
-                        Description = "A modern Swedish city known for its university, technology industry and aviation heritage.",
-                        ImagePath = "/images/cities/linkoping.jpg",
-                        IsPopular = false,
-                        ViewCount = 18000
-                    },
+                new Destination
+                {
+                    Slug = "lund",
+                    City = "lund",
+                    Country = "sweden",
+                    CountryCode = "SE",
+                    Description = "A charming university city with medieval history, cobbled streets and a famous cathedral.",
+                    ImagePath = "/images/cities/lund.jpg",
+                    IsPopular = false,
+                    ViewCount = 22000
+                },
 
-                    new Destination
-                    {
-                        City = "norrkoping",
-                        Country = "sweden",
-                        Description = "A historic Swedish city known for its industrial heritage, riverside architecture and cultural scene.",
-                        ImagePath = "/images/cities/norrkoping.jpg",
-                        IsPopular = false,
-                        ViewCount = 17000
-                    },
+                new Destination
+                {
+                    Slug = "kiruna",
+                    City = "kiruna",
+                    Country = "sweden",
+                    CountryCode = "SE",
+                    Description = "A northern Arctic city popular for winter adventures, northern lights and Lapland landscapes.",
+                    ImagePath = "/images/cities/kiruna.jpg",
+                    IsPopular = true,
+                    ViewCount = 30000
+                },
 
-                    new Destination
-                    {
-                        City = "jonkoping",
-                        Country = "sweden",
-                        Description = "A scenic city located on the southern shore of Lake Vattern with beautiful waterfront views.",
-                        ImagePath = "/images/cities/jonkoping.jpg",
-                        IsPopular = true,
-                        ViewCount = 21000
-                    },
-                    new Destination
-                    {
-                        City = "valdemarsvik",
-                        Country = "sweden",
-                        Description = "A charming coastal town in southeastern Sweden known for its archipelago, peaceful nature and scenic waterfront.",
-                        ImagePath = "/images/cities/valdemarsvik.jpg",
-                        IsPopular = false,
-                        ViewCount = 10000
-                    }
+                new Destination
+                {
+                    Slug = "linkoping",
+                    City = "linkoping",
+                    Country = "sweden",
+                    CountryCode = "SE",
+                    Description = "A modern Swedish city known for its university, technology industry and aviation heritage.",
+                    ImagePath = "/images/cities/linkoping.jpg",
+                    IsPopular = false,
+                    ViewCount = 18000
+                },
+
+                new Destination
+                {
+                    Slug = "norrkoping",
+                    City = "norrkoping",
+                    Country = "sweden",
+                    CountryCode = "SE",
+                    Description = "A historic Swedish city known for its industrial heritage, riverside architecture and cultural scene.",
+                    ImagePath = "/images/cities/norrkoping.jpg",
+                    IsPopular = false,
+                    ViewCount = 17000
+                },
+
+                new Destination
+                {
+                    Slug = "jonkoping",
+                    City = "jonkoping",
+                    Country = "sweden",
+                    CountryCode = "SE",
+                    Description = "A scenic city located on the southern shore of Lake Vattern with beautiful waterfront views.",
+                    ImagePath = "/images/cities/jonkoping.jpg",
+                    IsPopular = true,
+                    ViewCount = 21000
+                },
+
+                new Destination
+                {
+                    Slug = "valdemarsvik",
+                    City = "valdemarsvik",
+                    Country = "sweden",
+                    CountryCode = "SE",
+                    Description = "A charming coastal town in southeastern Sweden known for its archipelago, peaceful nature and scenic waterfront.",
+                    ImagePath = "/images/cities/valdemarsvik.jpg",
+                    IsPopular = false,
+                    ViewCount = 10000
+                }
+
             };
 
                 await context.Destinations.AddRangeAsync(destinations);
@@ -1323,5 +1395,62 @@ namespace DyplomBooking2026.Data
                 }
             }
         }
+        // ─────────────────────────────────────────────────────────────────────
+        // Допоміжний метод для створення тестових користувачів
+        // ─────────────────────────────────────────────────────────────────────
+        private static async Task<ApplicationUser> EnsureUserAsync(
+            UserManager<ApplicationUser> userManager,
+            string email,
+            string fullName,
+            string password,
+            string role)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                user = new ApplicationUser
+                {
+                    UserName = email,
+                    Email = email,
+                    FullName = fullName,
+                    EmailConfirmed = true
+                };
+
+                var createResult = await userManager.CreateAsync(user, password);
+
+                if (!createResult.Succeeded)
+                {
+                    var errors = string.Join(
+                        "; ",
+                        createResult.Errors.Select(error => error.Description)
+                    );
+
+                    throw new Exception(
+                        $"Не вдалося створити користувача {email}: {errors}"
+                    );
+                }
+            }
+
+            if (!await userManager.IsInRoleAsync(user, role))
+            {
+                var roleResult = await userManager.AddToRoleAsync(user, role);
+
+                if (!roleResult.Succeeded)
+                {
+                    var errors = string.Join(
+                        "; ",
+                        roleResult.Errors.Select(error => error.Description)
+                    );
+
+                    throw new Exception(
+                        $"Не вдалося додати роль {role} користувачу {email}: {errors}"
+                    );
+                }
+            }
+
+            return user;
+        }
+
     }
 }

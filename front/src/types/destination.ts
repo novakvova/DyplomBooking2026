@@ -1,9 +1,11 @@
 export interface Destination {
   id: number;
+  slug: string;
   city: string;
   country: string;
-  imagePath: string;
+  countryCode: string;
   description: string;
-  viewCount: number;
+  imagePath: string;
   isPopular: boolean;
+  viewCount: number;
 }

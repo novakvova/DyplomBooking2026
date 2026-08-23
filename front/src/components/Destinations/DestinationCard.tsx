@@ -1,54 +1,59 @@
-import type { Destination } from "../../types/destionation";
+import { useTranslation } from "react-i18next";
 
+import { getMediaUrl } from "../../api/client";
+import type { Destination } from "../../types/destination";
 
 interface Props {
   destination: Destination;
+  onClick?: () => void;
 }
 
+const DestinationCard = ({ destination, onClick }: Props) => {
+  const { t, i18n } = useTranslation();
 
-const DestinationCard = ({ destination }: Props) => {
+  const cityName = t(`destinations.cities.${destination.slug}`, {
+    defaultValue: destination.city,
+  });
+
+  const countryNames = new Intl.DisplayNames([i18n.language], {
+    type: "region",
+  });
+
+  const countryName = destination.countryCode
+    ? countryNames.of(destination.countryCode.toUpperCase()) ?? destination.country
+    : destination.country;
+
+  const description = t(`destinations.descriptions.${destination.slug}`, {
+    defaultValue: destination.description,
+  });
+
+  const imageUrl = getMediaUrl(destination.imagePath);
 
   return (
-    <div
-      className="
-        flex
-        gap-4
-        items-center
-        cursor-pointer
-        hover:bg-gray-50
-        rounded-xl
-        p-2
-      "
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full cursor-pointer items-center gap-4 rounded-xl p-2 text-left transition hover:bg-gray-50"
     >
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt={`${cityName}, ${countryName}`}
+          className="h-16 w-16 shrink-0 rounded-xl object-cover"
+        />
+      )}
 
-      <img
-        src={destination.imagePath}
-        alt={destination.city}
-        className="
-          w-16
-          h-16
-          rounded-xl
-          object-cover
-        "
-      />
-
-
-      <div>
-
-        <h3 className="font-bold text-lg">
-          {destination.city}, {destination.country}
+      <div className="min-w-0">
+        <h3 className="text-lg font-bold">
+          {cityName}, {countryName}
         </h3>
 
-
         <p className="text-sm text-gray-600">
-          {destination.description}
+          {description}
         </p>
-
       </div>
-
-    </div>
+    </button>
   );
 };
-
 
 export default DestinationCard;

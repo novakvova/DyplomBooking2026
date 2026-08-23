@@ -6,231 +6,202 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace DyplomBooking2026.Controllers
+namespace DyplomBooking2026.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class WishlistController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
-    public class WishlistController : ControllerBase
+    private readonly ApplicationDbContext _context;
+
+    public WishlistController(ApplicationDbContext context)
     {
-        private readonly ApplicationDbContext _context;
+        _context = context;
+    }
 
-        public WishlistController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+    // ──────────────────────────────────────────
+    // CURRENT USER
+    // Беремо UserId з JWT.
+    // NameIdentifier — основний claim,
+    // sub — fallback для OAuth/JWT provider.
+    // ──────────────────────────────────────────
 
+    private string? CurrentUserId =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier)
+        ?? User.FindFirstValue("sub");
 
-        // ──────────────────────────────────────────
-        // Поточний авторизований користувач
-        // ──────────────────────────────────────────
+    // Перевіряємо, що користувач із JWT
+    // реально існує в поточній базі даних.
+    // Це захищає від старих JWT після reset/drop БД.
+    private async Task<bool> CurrentUserExistsAsync(string userId)
+    {
+        return await _context.Users
+            .AsNoTracking()
+            .AnyAsync(x => x.Id == userId);
+    }
 
-        private string? CurrentUserId =>
-            User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue("sub");
+    // ──────────────────────────────────────────
+    // GET: api/wishlist
+    // Список бажань поточного користувача
+    // ──────────────────────────────────────────
 
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<HousingDto>>> GetWishlist()
+    {
+        var userId = CurrentUserId;
 
-        // ──────────────────────────────────────────
-        // GET: api/wishlist
-        // Отримати список бажань поточного користувача
-        // ──────────────────────────────────────────
+        if (string.IsNullOrWhiteSpace(userId))
+            return Unauthorized();
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<HousingDto>>> GetWishlist()
-        {
-            var userId = CurrentUserId;
+        if (!await CurrentUserExistsAsync(userId))
+            return Unauthorized();
 
-            if (string.IsNullOrWhiteSpace(userId))
+        var wishlist = await _context.WishlistItems
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CreatedAt)
+            .Select(x => new HousingDto
             {
-                return Unauthorized();
-            }
+                Id = x.Housing.Id,
+                Title = x.Housing.Title,
+                Description = x.Housing.Description,
+                Type = x.Housing.Type.ToString(),
+                Address = x.Housing.Address,
+                City = x.Housing.City,
+                Rooms = x.Housing.Rooms,
+                MaxGuests = x.Housing.MaxGuests,
+                PricePerNight = x.Housing.PricePerNight,
+                IsAvailable = x.Housing.IsAvailable,
 
+                OwnerName = x.Housing.Owner != null
+                    ? x.Housing.Owner.FullName
+                        ?? x.Housing.Owner.Email
+                        ?? "—"
+                    : "—",
 
-            var wishlist = await _context.WishlistItems
-                .Where(x => x.UserId == userId)
+                CreatedAt = x.Housing.CreatedAt,
 
-                // Нові додані оголошення показуємо першими
-                .OrderByDescending(x => x.CreatedAt)
+                // Спочатку головне фото,
+                // якщо його немає — перше доступне.
+                MainPhotoPath = x.Housing.Photos
+                    .Where(p => p.IsMain)
+                    .Select(p => p.FilePath)
+                    .FirstOrDefault()
+                    ?? x.Housing.Photos
+                        .Select(p => p.FilePath)
+                        .FirstOrDefault()
+            })
+            .ToListAsync();
 
-                // Повертаємо HousingDto,
-                // а не Housing entity напряму
-                .Select(x => new HousingDto
-                {
-                    Id = x.Housing.Id,
+        return Ok(wishlist);
+    }
 
-                    Title = x.Housing.Title,
+    // ──────────────────────────────────────────
+    // POST: api/wishlist/5
+    // Додати житло до списку бажань
+    // ──────────────────────────────────────────
 
-                    Description = x.Housing.Description,
+    [HttpPost("{housingId:int}")]
+    public async Task<IActionResult> Add(int housingId)
+    {
+        var userId = CurrentUserId;
 
-                    Type = x.Housing.Type.ToString(),
+        if (string.IsNullOrWhiteSpace(userId))
+            return Unauthorized();
 
-                    Address = x.Housing.Address,
+        // Захист від старого JWT.
+        if (!await CurrentUserExistsAsync(userId))
+            return Unauthorized();
 
-                    City = x.Housing.City,
+        var housingExists = await _context.Housings
+            .AsNoTracking()
+            .AnyAsync(x => x.Id == housingId);
 
-                    Rooms = x.Housing.Rooms,
+        if (!housingExists)
+            return NotFound("Житло не знайдено.");
 
-                    MaxGuests = x.Housing.MaxGuests,
+        // POST робимо ідемпотентним:
+        // якщо житло вже є — нічого не змінюємо.
+        var alreadyExists = await _context.WishlistItems
+            .AsNoTracking()
+            .AnyAsync(x =>
+                x.UserId == userId &&
+                x.HousingId == housingId
+            );
 
-                    PricePerNight = x.Housing.PricePerNight,
-
-                    IsAvailable = x.Housing.IsAvailable,
-
-                    OwnerName =
-                        x.Housing.Owner != null
-                            ? (
-                                x.Housing.Owner.FullName
-                                ?? x.Housing.Owner.Email
-                                ?? "—"
-                              )
-                            : "—",
-
-                    CreatedAt = x.Housing.CreatedAt,
-
-
-                    // Спочатку шукаємо головне фото.
-                    // Якщо головного немає — беремо перше доступне.
-                    MainPhotoPath =
-                        x.Housing.Photos
-                            .Where(p => p.IsMain)
-                            .Select(p => p.FilePath)
-                            .FirstOrDefault()
-
-                        ?? x.Housing.Photos
-                            .Select(p => p.FilePath)
-                            .FirstOrDefault()
-                })
-                .ToListAsync();
-
-
-            return Ok(wishlist);
-        }
-
-
-        // ──────────────────────────────────────────
-        // POST: api/wishlist/5
-        // Додати житло у список бажань
-        // ──────────────────────────────────────────
-
-        [HttpPost("{housingId:int}")]
-        public async Task<IActionResult> Add(int housingId)
-        {
-            var userId = CurrentUserId;
-
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                return Unauthorized();
-            }
-
-
-            // Перевіряємо, чи існує таке житло
-            var housingExists = await _context.Housings
-                .AnyAsync(x => x.Id == housingId);
-
-            if (!housingExists)
-            {
-                return NotFound("Житло не знайдено.");
-            }
-
-
-            // Перевіряємо, чи користувач уже додав це житло
-            var alreadyExists = await _context.WishlistItems
-                .AnyAsync(x =>
-                    x.UserId == userId &&
-                    x.HousingId == housingId
-                );
-
-
-            // Якщо вже є у wishlist —
-            // просто повертаємо 200 OK
-            if (alreadyExists)
-            {
-                return Ok();
-            }
-
-
-            var item = new WishlistItem
-            {
-                UserId = userId,
-                HousingId = housingId,
-                CreatedAt = DateTime.UtcNow
-            };
-
-
-            _context.WishlistItems.Add(item);
-
-            await _context.SaveChangesAsync();
-
-
-            return Ok();
-        }
-
-
-        // ──────────────────────────────────────────
-        // DELETE: api/wishlist/5
-        // Видалити житло зі списку бажань
-        // ──────────────────────────────────────────
-
-        [HttpDelete("{housingId:int}")]
-        public async Task<IActionResult> Remove(int housingId)
-        {
-            var userId = CurrentUserId;
-
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                return Unauthorized();
-            }
-
-
-            var item = await _context.WishlistItems
-                .FirstOrDefaultAsync(x =>
-                    x.UserId == userId &&
-                    x.HousingId == housingId
-                );
-
-
-            if (item == null)
-            {
-                return NotFound();
-            }
-
-
-            _context.WishlistItems.Remove(item);
-
-            await _context.SaveChangesAsync();
-
-
+        if (alreadyExists)
             return NoContent();
-        }
 
-
-        // ──────────────────────────────────────────
-        // GET: api/wishlist/5/check
-        // Перевірити, чи житло є у wishlist
-        // ──────────────────────────────────────────
-
-        [HttpGet("{housingId:int}/check")]
-        public async Task<IActionResult> Check(int housingId)
+        var item = new WishlistItem
         {
-            var userId = CurrentUserId;
+            UserId = userId,
+            HousingId = housingId,
+            CreatedAt = DateTime.UtcNow
+        };
 
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                return Unauthorized();
-            }
+        _context.WishlistItems.Add(item);
+        await _context.SaveChangesAsync();
 
+        return NoContent();
+    }
 
-            var isFavorite = await _context.WishlistItems
-                .AnyAsync(x =>
-                    x.UserId == userId &&
-                    x.HousingId == housingId
-                );
+    // ──────────────────────────────────────────
+    // DELETE: api/wishlist/5
+    // Видалити житло зі списку бажань
+    // ──────────────────────────────────────────
 
+    [HttpDelete("{housingId:int}")]
+    public async Task<IActionResult> Remove(int housingId)
+    {
+        var userId = CurrentUserId;
 
-            return Ok(new
-            {
-                isFavorite
-            });
-        }
+        if (string.IsNullOrWhiteSpace(userId))
+            return Unauthorized();
+
+        if (!await CurrentUserExistsAsync(userId))
+            return Unauthorized();
+
+        var item = await _context.WishlistItems
+            .FirstOrDefaultAsync(x =>
+                x.UserId == userId &&
+                x.HousingId == housingId
+            );
+
+        // DELETE теж робимо ідемпотентним:
+        // якщо запису вже немає — результат все одно успішний.
+        if (item == null)
+            return NoContent();
+
+        _context.WishlistItems.Remove(item);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    // ──────────────────────────────────────────
+    // GET: api/wishlist/5/check
+    // Чи знаходиться житло у wishlist
+    // ──────────────────────────────────────────
+
+    [HttpGet("{housingId:int}/check")]
+    public async Task<IActionResult> Check(int housingId)
+    {
+        var userId = CurrentUserId;
+
+        if (string.IsNullOrWhiteSpace(userId))
+            return Unauthorized();
+
+        if (!await CurrentUserExistsAsync(userId))
+            return Unauthorized();
+
+        var isFavorite = await _context.WishlistItems
+            .AsNoTracking()
+            .AnyAsync(x =>
+                x.UserId == userId &&
+                x.HousingId == housingId
+            );
+
+        return Ok(new { isFavorite });
     }
 }

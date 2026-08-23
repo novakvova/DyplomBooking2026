@@ -1,16 +1,23 @@
-import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
-import { useCurrency } from "../hooks/useCurrency";
-import {housingApi} from "../api/api";
-import type {Housing} from "../types/housing";
+import { useState } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
+
 import {
+  housingApi,
   paymentsApi,
   PaymentMethod,
   PaymentStatus,
   type HousingBooking,
-} from '../api/api';
+} from "../api/api";
+
+import { useCurrency } from "../hooks/useCurrency";
+import useLocalizedNavigate from "../hooks/useLocalizedNavigate";
+import useLocalizedPath from "../hooks/useLocalizedPath";
+
+import type { Housing } from "../types/housing";
+import { getMediaUrl } from "../api/client";
 
 interface LocationState {
   housing: Housing;
@@ -29,51 +36,91 @@ interface PaymentForm {
   cardCvv: string;
 }
 
-const methodLabels: Record<string, string> = {
-  '0': '💳 Кредитна картка',
-  '1': '💳 Дебетова картка',
-  '2': '🅿️ PayPal',
-  '3': '🏦 Банківський переказ',
-};
-
 const BookingPage = () => {
+  const { t, i18n } = useTranslation();
+
   const navigate = useNavigate();
+  const localizedNavigate = useLocalizedNavigate();
+  const localizedPath = useLocalizedPath();
+
   const location = useLocation();
+  const state = location.state as LocationState | null;
+
   const { convert, currency } = useCurrency();
-  const state = location.state as LocationState;
 
-  const [step, setStep] = useState<'payment' | 'processing' | 'success' | 'failed'>('payment');
-  const [payment, setPayment] = useState<{ transactionId: string; amount: number } | null>(null);
+  const [step, setStep] = useState<
+    "payment" | "processing" | "success" | "failed"
+  >("payment");
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<PaymentForm>({
-    defaultValues: { method: '0' },
+  const [payment, setPayment] = useState<{
+    transactionId: string;
+    amount: number;
+  } | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<PaymentForm>({
+    defaultValues: {
+      method: "0",
+    },
   });
 
-  const selectedMethod = watch('method');
-  const isCard = selectedMethod === '0' || selectedMethod === '1';
+  const selectedMethod = watch("method");
+  const isCard = selectedMethod === "0" || selectedMethod === "1";
 
-  // Якщо сторінка відкрита напряму без даних — редірект
+  // Якщо сторінка відкрита напряму без booking state —
+  // повертаємо користувача на локалізовану головну.
   if (!state) {
-    navigate('/');
-    return null;
+    return <Navigate to={localizedPath()} replace />;
   }
 
-  const { housing, checkIn, checkOut, guestsCount, nights, total } = state;
+  const {
+    housing,
+    checkIn,
+    checkOut,
+    guestsCount,
+    nights,
+    total,
+  } = state;
+
+  // ─────────────────────────────────────────────
+  // Localized formatting
+  // ─────────────────────────────────────────────
+
+  const formatPrice = (value: number) =>
+    convert(value).toLocaleString(i18n.language);
+
+  const formatDate = (value: string) =>
+    new Date(value).toLocaleDateString(i18n.language);
+
+  const methodLabels: Record<string, string> = {
+    "0": t("booking.paymentMethods.creditCard"),
+    "1": t("booking.paymentMethods.debitCard"),
+    "2": t("booking.paymentMethods.paypal"),
+    "3": t("booking.paymentMethods.bankTransfer"),
+  };
+
+  // ─────────────────────────────────────────────
+  // Payment
+  // ─────────────────────────────────────────────
 
   const onSubmit = async (formData: PaymentForm) => {
-    setStep('processing');
+    setStep("processing");
 
     try {
-      // Крок 1: Створити бронювання
+      // Крок 1: створюємо бронювання.
       const booking: HousingBooking = await housingApi.book(housing.id, {
         checkIn: new Date(checkIn).toISOString(),
         checkOut: new Date(checkOut).toISOString(),
         guestsCount,
       });
 
-      // Крок 2: Оплатити
+      // Крок 2: проводимо оплату.
       const cardLastFour = isCard
-        ? formData.cardNumber.replace(/\s/g, '').slice(-4)
+        ? formData.cardNumber.replace(/\s/g, "").slice(-4)
         : undefined;
 
       const result = await paymentsApi.payHousingBooking({
@@ -83,219 +130,374 @@ const BookingPage = () => {
       });
 
       if (result.status === PaymentStatus.Paid) {
-        setPayment({ transactionId: result.transactionId, amount: result.amount });
-        setStep('success');
-        toast.success('Оплата успішна! 🎉');
+        setPayment({
+          transactionId: result.transactionId,
+          amount: result.amount,
+        });
+
+        setStep("success");
+        toast.success(t("booking.toast.success"));
       } else {
-        setStep('failed');
-        toast.error(result.failureReason ?? 'Оплата відхилена');
+        setStep("failed");
+
+        toast.error(
+          result.failureReason ||
+            t("booking.toast.paymentDeclined")
+        );
       }
     } catch (err: any) {
-      setStep('failed');
-      toast.error(err.response?.data ?? 'Помилка при бронюванні');
+      setStep("failed");
+
+      toast.error(
+        typeof err.response?.data === "string"
+          ? err.response.data
+          : t("booking.toast.bookingError")
+      );
     }
   };
 
-  // ── Стан: Обробка ────────────────────────────────
-  if (step === 'processing') {
+  // ─────────────────────────────────────────────
+  // Processing
+  // ─────────────────────────────────────────────
+
+  if (step === "processing") {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-slate-800" />
-        <p className="text-slate-600">Обробляємо платіж...</p>
+
+        <p className="text-slate-600">
+          {t("booking.processing")}
+        </p>
       </div>
     );
   }
 
-  // ── Стан: Успіх ──────────────────────────────────
-  if (step === 'success') {
+  // ─────────────────────────────────────────────
+  // Success
+  // ─────────────────────────────────────────────
+
+  if (step === "success") {
     return (
       <div className="mx-auto max-w-md px-6 py-20 text-center">
         <div className="mb-6 text-6xl">🎉</div>
-        <h1 className="text-2xl font-bold text-slate-800">Бронювання підтверджено!</h1>
-        <p className="mt-2 text-slate-500">{housing.title}</p>
 
-        <div className="my-8 rounded-2xl bg-green-50 p-6 text-left space-y-3">
+        <h1 className="text-2xl font-bold text-slate-800">
+          {t("booking.success.title")}
+        </h1>
+
+        <p className="mt-2 text-slate-500">
+          {housing.title}
+        </p>
+
+        <div className="my-8 space-y-3 rounded-2xl bg-green-50 p-6 text-left">
           <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Транзакція</span>
-            <span className="font-mono font-medium text-slate-800">{payment?.transactionId}</span>
+            <span className="text-slate-500">
+              {t("booking.success.transaction")}
+            </span>
+
+            <span className="font-mono font-medium text-slate-800">
+              {payment?.transactionId}
+            </span>
           </div>
+
           <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Заїзд</span>
-            <span className="font-medium text-slate-800">{new Date(checkIn).toLocaleDateString('uk')}</span>
+            <span className="text-slate-500">
+              {t("booking.checkIn")}
+            </span>
+
+            <span className="font-medium text-slate-800">
+              {formatDate(checkIn)}
+            </span>
           </div>
+
           <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Виїзд</span>
-            <span className="font-medium text-slate-800">{new Date(checkOut).toLocaleDateString('uk')}</span>
+            <span className="text-slate-500">
+              {t("booking.checkOut")}
+            </span>
+
+            <span className="font-medium text-slate-800">
+              {formatDate(checkOut)}
+            </span>
           </div>
+
           <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Гостей</span>
-            <span className="font-medium text-slate-800">{guestsCount}</span>
+            <span className="text-slate-500">
+              {t("booking.guests")}
+            </span>
+
+            <span className="font-medium text-slate-800">
+              {guestsCount}
+            </span>
           </div>
+
           <div className="flex justify-between border-t border-green-200 pt-3 text-base font-bold">
-            <span className="text-slate-700">Сплачено</span>
-            <span className="text-green-600">{convert(payment?.amount ?? 0).toLocaleString()} {currency.toUpperCase()}</span>
+            <span className="text-slate-700">
+              {t("booking.success.paid")}
+            </span>
+
+            <span className="text-green-600">
+              {formatPrice(payment?.amount ?? 0)}{" "}
+              {currency.toUpperCase()}
+            </span>
           </div>
         </div>
 
         <div className="flex gap-3">
           <button
-            onClick={() => navigate('/profile')}
-            className="flex-1 rounded-xl bg-slate-800 py-3 text-sm font-medium text-white hover:bg-slate-700 transition"
+            type="button"
+            onClick={() => localizedNavigate("/profile")}
+            className="flex-1 rounded-xl bg-slate-800 py-3 text-sm font-medium text-white transition hover:bg-slate-700"
           >
-            Мої бронювання
+            {t("booking.success.myBookings")}
           </button>
+
           <button
-            onClick={() => navigate('/')}
-            className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+            type="button"
+            onClick={() => localizedNavigate("")}
+            className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
-            На головну
+            {t("booking.success.home")}
           </button>
         </div>
       </div>
     );
   }
 
-  // ── Стан: Помилка ────────────────────────────────
-  if (step === 'failed') {
+  // ─────────────────────────────────────────────
+  // Failed
+  // ─────────────────────────────────────────────
+
+  if (step === "failed") {
     return (
       <div className="mx-auto max-w-md px-6 py-20 text-center">
         <div className="mb-6 text-6xl">😞</div>
-        <h1 className="text-2xl font-bold text-slate-800">Оплата відхилена</h1>
-        <p className="mt-2 text-slate-500">Спробуй ще раз або обери інший спосіб оплати</p>
+
+        <h1 className="text-2xl font-bold text-slate-800">
+          {t("booking.failed.title")}
+        </h1>
+
+        <p className="mt-2 text-slate-500">
+          {t("booking.failed.description")}
+        </p>
+
         <div className="mt-8 flex gap-3">
           <button
-            onClick={() => setStep('payment')}
-            className="flex-1 rounded-xl bg-slate-800 py-3 text-sm font-medium text-white hover:bg-slate-700 transition"
+            type="button"
+            onClick={() => setStep("payment")}
+            className="flex-1 rounded-xl bg-slate-800 py-3 text-sm font-medium text-white transition hover:bg-slate-700"
           >
-            Спробувати ще раз
+            {t("booking.failed.tryAgain")}
           </button>
+
           <button
+            type="button"
             onClick={() => navigate(-1)}
-            className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+            className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
-            Назад
+            {t("common.back")}
           </button>
         </div>
       </div>
     );
   }
 
-  // ── Стан: Форма оплати ───────────────────────────
+  // ─────────────────────────────────────────────
+  // Payment form
+  // ─────────────────────────────────────────────
+
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
-      <button onClick={() => navigate(-1)} className="mb-6 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800">
-        ← Назад
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="mb-6 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800"
+      >
+        ← {t("common.back")}
       </button>
 
-      <h1 className="mb-8 text-2xl font-bold text-slate-800">Оформлення бронювання</h1>
+      <h1 className="mb-8 text-2xl font-bold text-slate-800">
+        {t("booking.title")}
+      </h1>
 
       <div className="grid gap-8 lg:grid-cols-3">
-
-        {/* Left — Payment form */}
+        {/* Payment form */}
         <div className="lg:col-span-2">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
-            {/* Спосіб оплати */}
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
+            {/* Payment method */}
             <div className="rounded-2xl border border-slate-200 p-6">
-              <h2 className="mb-4 text-base font-semibold text-slate-800">Спосіб оплати</h2>
+              <h2 className="mb-4 text-base font-semibold text-slate-800">
+                {t("booking.paymentMethod")}
+              </h2>
+
               <div className="grid grid-cols-2 gap-3">
                 {Object.entries(methodLabels).map(([value, label]) => (
                   <label
                     key={value}
                     className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition ${
                       selectedMethod === value
-                        ? 'border-slate-800 bg-slate-50 font-medium'
-                        : 'border-slate-200 hover:border-slate-300'
+                        ? "border-slate-800 bg-slate-50 font-medium"
+                        : "border-slate-200 hover:border-slate-300"
                     }`}
                   >
                     <input
                       type="radio"
                       value={value}
-                      {...register('method')}
+                      {...register("method")}
                       className="accent-slate-800"
                     />
+
                     {label}
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Дані картки (тільки для card) */}
+            {/* Card details */}
             {isCard && (
-              <div className="rounded-2xl border border-slate-200 p-6 space-y-4">
-                <h2 className="text-base font-semibold text-slate-800">Дані картки</h2>
+              <div className="space-y-4 rounded-2xl border border-slate-200 p-6">
+                <h2 className="text-base font-semibold text-slate-800">
+                  {t("booking.card.title")}
+                </h2>
 
+                {/* Card number */}
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">Номер картки</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-600">
+                    {t("booking.card.number")}
+                  </label>
+
                   <input
                     type="text"
                     placeholder="0000 0000 0000 0000"
                     maxLength={19}
-                    {...register('cardNumber', {
-                      required: isCard ? "Введіть номер картки" : false,
-                      minLength: { value: 19, message: 'Введіть повний номер' },
+                    {...register("cardNumber", {
+                      required: isCard
+                        ? t("booking.validation.cardNumberRequired")
+                        : false,
+                      minLength: {
+                        value: 19,
+                        message: t("booking.validation.cardNumberFull"),
+                      },
                     })}
                     onChange={(e) => {
-                      const v = e.target.value.replace(/\D/g, '').slice(0, 16);
-                      e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 16);
+
+                      e.target.value = value
+                        .replace(/(.{4})/g, "$1 ")
+                        .trim();
                     }}
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-mono outline-none focus:border-slate-400"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 font-mono text-sm outline-none focus:border-slate-400"
                   />
-                  {errors.cardNumber && <p className="mt-1 text-xs text-red-500">{errors.cardNumber.message}</p>}
+
+                  {errors.cardNumber && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.cardNumber.message}
+                    </p>
+                  )}
                 </div>
 
+                {/* Card holder */}
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">Ім'я власника</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-600">
+                    {t("booking.card.holder")}
+                  </label>
+
                   <input
                     type="text"
-                    placeholder="IVAN PETRENKO"
-                    {...register('cardName', { required: isCard ? "Введіть ім'я" : false })}
+                    placeholder={t("booking.card.holderPlaceholder")}
+                    {...register("cardName", {
+                      required: isCard
+                        ? t("booking.validation.cardNameRequired")
+                        : false,
+                    })}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm uppercase outline-none focus:border-slate-400"
                   />
-                  {errors.cardName && <p className="mt-1 text-xs text-red-500">{errors.cardName.message}</p>}
+
+                  {errors.cardName && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.cardName.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
+                  {/* Expiry */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">Термін дії</label>
+                    <label className="mb-1 block text-xs font-medium text-slate-600">
+                      {t("booking.card.expiry")}
+                    </label>
+
                     <input
                       type="text"
                       placeholder="MM/YY"
                       maxLength={5}
-                      {...register('cardExpiry', { required: isCard ? "Введіть термін" : false })}
+                      {...register("cardExpiry", {
+                        required: isCard
+                          ? t("booking.validation.expiryRequired")
+                          : false,
+                      })}
                       onChange={(e) => {
-                        const v = e.target.value.replace(/\D/g, '').slice(0, 4);
-                        e.target.value = v.length > 2 ? `${v.slice(0, 2)}/${v.slice(2)}` : v;
+                        const value = e.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 4);
+
+                        e.target.value =
+                          value.length > 2
+                            ? `${value.slice(0, 2)}/${value.slice(2)}`
+                            : value;
                       }}
-                      className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-mono outline-none focus:border-slate-400"
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 font-mono text-sm outline-none focus:border-slate-400"
                     />
-                    {errors.cardExpiry && <p className="mt-1 text-xs text-red-500">{errors.cardExpiry.message}</p>}
+
+                    {errors.cardExpiry && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.cardExpiry.message}
+                      </p>
+                    )}
                   </div>
+
+                  {/* CVV */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">CVV</label>
+                    <label className="mb-1 block text-xs font-medium text-slate-600">
+                      {t("booking.card.cvv")}
+                    </label>
+
                     <input
                       type="password"
                       placeholder="•••"
                       maxLength={3}
-                      {...register('cardCvv', { required: isCard ? "Введіть CVV" : false })}
-                      className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-mono outline-none focus:border-slate-400"
+                      {...register("cardCvv", {
+                        required: isCard
+                          ? t("booking.validation.cvvRequired")
+                          : false,
+                      })}
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 font-mono text-sm outline-none focus:border-slate-400"
                     />
-                    {errors.cardCvv && <p className="mt-1 text-xs text-red-500">{errors.cardCvv.message}</p>}
+
+                    {errors.cardCvv && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.cardCvv.message}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <p className="flex items-center gap-2 text-xs text-slate-400">
-                  🔒 Дані захищені шифруванням SSL
+                  🔒 {t("booking.card.secure")}
                 </p>
               </div>
             )}
 
-            {/* PayPal / Bank */}
+            {/* PayPal / bank transfer */}
             {!isCard && (
-              <div className="rounded-2xl border border-slate-200 p-6 text-center text-slate-500 text-sm">
-                {selectedMethod === '2'
-                  ? '🅿️ Ви будете перенаправлені на PayPal після підтвердження'
-                  : '🏦 Реквізити для переказу надійдуть на ваш email'}
+              <div className="rounded-2xl border border-slate-200 p-6 text-center text-sm text-slate-500">
+                {selectedMethod === "2"
+                  ? t("booking.paypalInfo")
+                  : t("booking.bankInfo")}
               </div>
             )}
 
@@ -303,54 +505,74 @@ const BookingPage = () => {
               type="submit"
               className="w-full rounded-xl bg-slate-800 py-4 text-sm font-semibold text-white transition hover:bg-slate-700"
             >
-              Підтвердити та оплатити {convert(total).toLocaleString()} {currency.toUpperCase()}
+              {t("booking.payButton", {
+                amount: `${formatPrice(total)} ${currency.toUpperCase()}`,
+              })}
             </button>
           </form>
         </div>
 
-        {/* Right — Order summary */}
+        {/* Order summary */}
         <div className="lg:col-span-1">
           <div className="sticky top-24 rounded-2xl border border-slate-200 p-6">
-            <h2 className="mb-4 text-base font-semibold text-slate-800">Ваше бронювання</h2>
+            <h2 className="mb-4 text-base font-semibold text-slate-800">
+              {t("booking.summary.title")}
+            </h2>
 
             {housing.mainPhotoPath && (
               <img
-                src={housing.mainPhotoPath}
+                src={getMediaUrl(housing.mainPhotoPath)}
                 alt={housing.title}
                 className="mb-4 h-36 w-full rounded-xl object-cover"
               />
             )}
 
-            <h3 className="font-medium text-slate-800">{housing.title}</h3>
-            <p className="mt-1 text-xs text-slate-500">📍 {housing.city}</p>
+            <h3 className="font-medium text-slate-800">
+              {housing.title}
+            </h3>
+
+            <p className="mt-1 text-xs text-slate-500">
+              📍 {housing.city}
+            </p>
 
             <div className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-sm">
               <div className="flex justify-between text-slate-600">
-                <span>Заїзд</span>
-                <span className="font-medium">{new Date(checkIn).toLocaleDateString('uk')}</span>
+                <span>{t("booking.checkIn")}</span>
+                <span className="font-medium">{formatDate(checkIn)}</span>
               </div>
+
               <div className="flex justify-between text-slate-600">
-                <span>Виїзд</span>
-                <span className="font-medium">{new Date(checkOut).toLocaleDateString('uk')}</span>
+                <span>{t("booking.checkOut")}</span>
+                <span className="font-medium">{formatDate(checkOut)}</span>
               </div>
+
               <div className="flex justify-between text-slate-600">
-                <span>Гостей</span>
+                <span>{t("booking.guests")}</span>
                 <span className="font-medium">{guestsCount}</span>
               </div>
+
               <div className="flex justify-between text-slate-600">
-                <span>{convert(housing.pricePerNight).toLocaleString()} {currency.toUpperCase()} × {nights} ночей</span>
-                <span className="font-medium">{convert(total).toLocaleString()} {currency.toUpperCase()}</span>
-              </div>
-              <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold text-slate-800">
-                <span>Разом</span>
                 <span>
-                  {convert(total).toLocaleString()} {currency.toUpperCase()}
+                  {formatPrice(housing.pricePerNight)}{" "}
+                  {currency.toUpperCase()} ×{" "}
+                  {t("booking.nights", { count: nights })}
+                </span>
+
+                <span className="font-medium">
+                  {formatPrice(total)} {currency.toUpperCase()}
+                </span>
+              </div>
+
+              <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold text-slate-800">
+                <span>{t("booking.total")}</span>
+
+                <span>
+                  {formatPrice(total)} {currency.toUpperCase()}
                 </span>
               </div>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

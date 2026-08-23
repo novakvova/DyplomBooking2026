@@ -1,81 +1,118 @@
-import DestinationCard from "../Destinations/DestinationCard";
-import type { Destination } from "../../types/destionation";
+import { useTranslation } from "react-i18next";
 
+import type { Destination } from "../../types/destination";
+import { getMediaUrl } from "../../api/client";
 
-interface Props {
-    destinations: Destination[];
-    recent: Destination[];
+interface DestinationDropdownProps {
+  destinations: Destination[];
+  recent?: Destination[];
+  onSelect: (destination: Destination) => void;
 }
 
 const DestinationDropdown = ({
-    destinations,
-    recent
-}: Props) => {
+  destinations,
+  recent = [],
+  onSelect,
+}: DestinationDropdownProps) => {
+  const { t, i18n } = useTranslation();
 
+  // Локалізація назв країн через ISO-код.
+  const countryNames = new Intl.DisplayNames([i18n.language], {
+    type: "region",
+  });
+
+  const getCountryName = (destination: Destination) => {
+    if (!destination.countryCode) return destination.country;
 
     return (
+      countryNames.of(destination.countryCode.toUpperCase()) ??
+      destination.country
+    );
+  };
 
-        <div
-            className="
-            absolute
-            top-full
-            left-0
-            mt-3
-            w-[607px]
-            bg-white
-            rounded-2xl
-            shadow-2xl
-            p-5
-            z-50
-            "
-        >
+  // Назву міста беремо з i18n через стабільний slug.
+  const getCityName = (destination: Destination) =>
+    t(`destinations.cities.${destination.slug}`, {
+      defaultValue: destination.city,
+    });
 
-            {
-                recent.length > 0 && (
+  // Опис теж локалізуємо через slug.
+  const getDescription = (destination: Destination) =>
+    t(`destinations.descriptions.${destination.slug}`, {
+      defaultValue: destination.description,
+    });
 
-                    <>
-                        <h2 className="
-                        font-bold
-                        text-lg
-                        mb-4
-                        ">
-                            Ви нещодавно шукали:
-                        </h2>
+  const renderDestination = (
+    item: Destination,
+    keyPrefix: string
+  ) => {
+    const cityName = getCityName(item);
+    const countryName = getCountryName(item);
+    const description = getDescription(item);
 
-                        <div className="mb-6">
-                            {
-                                recent.map(item => (
-                                    <DestinationCard
-                                        key={item.id}
-                                        destination={item}
-                                    />
-                                ))
-                            }
-                        </div>
-                    </>
-                )
-            }
+    return (
+      <button
+        key={`${keyPrefix}-${item.id}`}
+        type="button"
+        onClick={() => onSelect(item)}
+        className="flex w-full items-center gap-4 rounded-xl p-2 text-left transition hover:bg-slate-100"
+      >
+        {item.imagePath && (
+          <img
+            src={getMediaUrl(item.imagePath)}
+            alt={`${cityName}, ${countryName}`}
+            className="h-20 w-20 shrink-0 rounded-lg object-cover"
+          />
+        )}
 
-            <h2 className="
-            font-bold
-            text-lg
-            mb-4
-            ">
-                Популярні напрямки:
-            </h2>
+        <div className="min-w-0">
+          <h3 className="text-lg font-bold">
+            {cityName}, {countryName}
+          </h3>
 
-            <div>
-                {
-                    destinations.map(item => (
-                        <DestinationCard
-                            key={item.id}
-                            destination={item}
-                        />
-                    ))
-                }
-            </div>
+          <p className="text-sm text-slate-600">
+            {description}
+          </p>
         </div>
-    )
-}
+      </button>
+    );
+  };
+
+  return (
+    <div className="absolute left-0 top-full z-[2000] mt-3 max-h-[520px] w-[607px] overflow-y-auto rounded-2xl bg-white p-5 text-slate-900 shadow-xl">
+      {/* Нещодавні напрямки */}
+      {recent.length > 0 && (
+        <>
+          <h2 className="mb-5 text-xl font-bold">
+            {t("destinationDropdown.recent")}
+          </h2>
+
+          <div className="mb-6 space-y-2">
+            {recent.map((item) =>
+              renderDestination(item, "recent")
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Популярні напрямки / результати пошуку */}
+      <h2 className="mb-5 text-xl font-bold">
+        {t("destinationDropdown.popular")}
+      </h2>
+
+      {destinations.length === 0 && (
+        <p className="py-5 text-center text-slate-500">
+          {t("common.notFound")}
+        </p>
+      )}
+
+      <div className="space-y-2">
+        {destinations.map((item) =>
+          renderDestination(item, "destination")
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default DestinationDropdown;
