@@ -37,7 +37,10 @@ namespace DyplomBooking2026.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto dto)
         {
-            if (await _userManager.FindByEmailAsync(dto.Email) != null)
+            // Перевіряємо, чи користувач уже існує.
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+
+            if (existingUser != null)
                 return BadRequest("Користувач з таким email вже існує.");
 
             var user = new ApplicationUser
@@ -45,26 +48,60 @@ namespace DyplomBooking2026.Controllers
                 UserName = dto.Email,
                 Email = dto.Email,
                 FullName = dto.FullName,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                CreatedAt = DateTime.UtcNow,
+                IsBlocked = false
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
-            if (!result.Succeeded)
-                return BadRequest(result.Errors.Select(e => e.Description));
 
-            await _userManager.AddToRoleAsync(user, "Client");
+            if (!result.Succeeded)
+            {
+                return BadRequest(
+                    result.Errors.Select(e => e.Description)
+                );
+            }
+
+            // Новий користувач отримує роль Client.
+            var roleResult = await _userManager.AddToRoleAsync(user, "Client");
+
+            if (!roleResult.Succeeded)
+            {
+                return BadRequest(
+                    roleResult.Errors.Select(e => e.Description)
+                );
+            }
 
             return Ok(await BuildAuthResponse(user));
         }
+
+        // ──────────────────────────────────────────
+        // LOGIN
+        // ──────────────────────────────────────────
 
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
+
             if (user == null)
                 return Unauthorized("Невірний email або пароль.");
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
+            // Ручне блокування адміністратором.
+            if (user.IsBlocked)
+                return Unauthorized("Ваш акаунт заблоковано.");
+
+            // Перевіряємо пароль через Identity.
+            var result = await _signInManager.CheckPasswordSignInAsync(
+                user,
+                dto.Password,
+                lockoutOnFailure: false
+            );
+
+            // Додаткова перевірка Identity Lockout.
+            if (result.IsLockedOut)
+                return Unauthorized("Ваш акаунт заблоковано.");
+
             if (!result.Succeeded)
                 return Unauthorized("Невірний email або пароль.");
 

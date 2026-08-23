@@ -1,168 +1,205 @@
-//import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Guests {
-    adults: number;
-    children: number;
-    babies: number;
-    pets: number;
-    rooms: number;
+  adults: number;
+  children: number;
+  babies: number;
+  pets: number;
+  rooms: number;
 }
 
 interface Props {
-    guests: Guests;
-    setGuests: React.Dispatch<React.SetStateAction<Guests>>;
+  guests: Guests;
+  setGuests: React.Dispatch<
+    React.SetStateAction<Guests>
+  >;
 }
 
 const GuestsDropdown = ({
-    guests,
-    setGuests
+  guests,
+  setGuests,
 }: Props) => {
+  const { t } = useTranslation();
 
-    const updateCount = (
+  const updateCount = (
     key: keyof Guests,
     value: number
-    ) => {
+  ) => {
+    setGuests((prev) => {
+      const newValue =
+        prev[key] + value;
 
-    setGuests(prev => {
-        const newValue = prev[key] + value;
-
-        // Дорослі мінімум 1
-        if (
+      // Дорослих має бути мінімум 1.
+      if (
         key === "adults" &&
         newValue < 1
-        ) {
+      ) {
         return prev;
-        }
+      }
 
-        return {
+      return {
         ...prev,
-        [key]: Math.max(0, newValue)
-        };
+        [key]: Math.max(
+          0,
+          newValue
+        ),
+      };
     });
-    };
+  };
 
+  const items: {
+    key: keyof Guests;
+    titleKey: string;
+    subtitleKey?: string;
+  }[] = [
+    {
+      key: "adults",
+      titleKey:
+        "guestsDropdown.adults.title",
+      subtitleKey:
+        "guestsDropdown.adults.subtitle",
+    },
+    {
+      key: "children",
+      titleKey:
+        "guestsDropdown.children.title",
+      subtitleKey:
+        "guestsDropdown.children.subtitle",
+    },
+    {
+      key: "babies",
+      titleKey:
+        "guestsDropdown.babies.title",
+      subtitleKey:
+        "guestsDropdown.babies.subtitle",
+    },
+    {
+      key: "pets",
+      titleKey:
+        "guestsDropdown.pets.title",
+      subtitleKey:
+        "guestsDropdown.pets.subtitle",
+    },
+    {
+      key: "rooms",
+      titleKey:
+        "guestsDropdown.rooms.title",
+    },
+  ];
 
-    const items = [
-        {
-            key: "adults",
-            title: "Дорослі",
-            subtitle: "Вік: від 18р."
-        },
-        {
-            key: "children",
-            title: "Діти",
-            subtitle: "Вік: 2–12р."
-        },
-        {
-            key: "babies",
-            title: "Немовлята",
-            subtitle: "До 2"
-        },
-        {
-            key: "pets",
-            title: "Домашні тварини",
-            subtitle: "Подорожуєте із твариною-помічником?"
-        },
-        {
-            key: "rooms",
-            title: "Номери",
-            subtitle: ""
-        }
-    ];
-
-
-    return (
+  return (
+    <div
+      className="
+        absolute
+        right-0
+        top-full
+        z-50
+        mt-3
+        w-[360px]
+        rounded-2xl
+        bg-white
+        p-6
+        shadow-2xl
+      "
+    >
+      {items.map((item) => (
         <div
-            className="
-            absolute
-            top-full
-            right-0
-            mt-3
-            w-[360px]
-            bg-white
-            rounded-2xl
-            shadow-2xl
-            p-6
-            z-50
-            "
+          key={item.key}
+          className="
+            mb-6
+            flex
+            items-center
+            justify-between
+            last:mb-0
+          "
         >
+          <div>
+            <h3
+              className="
+                text-lg
+                font-medium
+                text-slate-900
+              "
+            >
+              {t(item.titleKey)}
+            </h3>
 
-            {
-                items.map(item => (
+            {item.subtitleKey && (
+              <p
+                className="
+                  text-sm
+                  text-slate-500
+                "
+              >
+                {t(
+                  item.subtitleKey
+                )}
+              </p>
+            )}
+          </div>
 
-                    <div
-                        key={item.key}
-                        className="
-                        flex
-                        justify-between
-                        items-center
-                        mb-6
-                        "
-                    >
+          <div
+            className="
+              flex
+              items-center
+              gap-3
+              rounded-lg
+              border
+              border-slate-300
+              px-2
+              py-1
+            "
+          >
+            <button
+              type="button"
+              onClick={() =>
+                updateCount(
+                  item.key,
+                  -1
+                )
+              }
+              className="
+                text-lg
+                text-slate-700
+                transition
+                hover:text-slate-950
+              "
+              aria-label={t(
+                "guestsDropdown.decrease"
+              )}
+            >
+              −
+            </button>
 
-                        <div>
-                            <h3 className="
-                                font-medium
-                                text-lg
-                                text-slate-900
-                                ">
-                                {item.title}
-                            </h3>
+            <span className="w-5 text-center">
+              {guests[item.key]}
+            </span>
 
-                            <p className="
-                                text-sm
-                                text-slate-500
-                                ">
-                                {item.subtitle}
-                            </p>
-                        </div>
-
-                        <div
-                            className="
-                            flex
-                            items-center
-                            gap-3
-                            border
-                            border-slate-300
-                            rounded-lg
-                            px-2
-                            py-1
-                            "
-                        >
-
-                            <button
-                                onClick={() =>
-                                    updateCount(
-                                        item.key as keyof Guests,
-                                        -1
-                                    )
-                                }
-                                className="text-lg"
-                            >
-                                −
-                            </button>
-
-                            <span className="w-5 text-center">
-                                {guests[item.key as keyof Guests]}
-                            </span>
-
-                            <button
-                                onClick={() =>
-                                    updateCount(
-                                        item.key as keyof Guests,
-                                        1
-                                    )
-                                }
-                                className="text-lg"
-                            >
-                                +
-                            </button>
-                        </div>
-                    </div>
-                ))
-            }
+            <button
+              type="button"
+              onClick={() =>
+                updateCount(
+                  item.key,
+                  1
+                )
+              }
+              className="
+                text-lg
+                text-slate-700
+                transition
+                hover:text-slate-950
+              "
+              aria-label={t(
+                "guestsDropdown.increase"
+              )}
+            >
+              +
+            </button>
+          </div>
         </div>
-    )
-}
+      ))}
+    </div>
+  );
+};
 
 export default GuestsDropdown;

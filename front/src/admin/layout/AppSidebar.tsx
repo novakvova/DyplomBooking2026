@@ -41,6 +41,18 @@ const BookingIcon = () => (
   </svg>
 );
 
+const ReviewsIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
+    {/* Bubble */}
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M20 12a8 8 0 01-8 8H7l-4 2 1.5-4A8 8 0 1118 6" />
+
+    {/* Star */}
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M18 2.5l.8 1.6 1.7.25-1.25 1.2.3 1.7L18 6.45l-1.55.8.3-1.7-1.25-1.2 1.7-.25.8-1.6z" />
+  </svg>
+);
+
 const PaymentIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -75,11 +87,27 @@ const navItems: NavItem[] = [
   },
   {
     icon: <BookingIcon />,
-    name: "Бронювання",
-    subItems: [
+    name: "Бронювання bookings",
+    path: "/admin/bookings",
+    /*subItems: [
       { name: "Кімнати", path: "/admin/bookings" },
       { name: "Житло", path: "/admin/housing-bookings" },
-    ],
+    ],*/
+  },
+    {
+    icon: <BookingIcon />,
+    name: "Бронювання housing",
+    path: "/admin/housing",
+  },
+  {
+    icon: <ReviewsIcon />,
+    name: "Reviews",
+    path: "/admin/reviews",
+  },
+  {
+    icon: <BookingIcon />, //<DestinationIcon />,
+    name: "Destinations",
+    path: "/admin/destinations",
   },
   {
     icon: <PaymentIcon />,
@@ -158,11 +186,11 @@ const AppSidebar: React.FC = () => {
       <div className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
         <Link to="/admin" className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-lg text-white shadow">
-            <img src="/public/images/logos/Logo_WayGo.png" alt="WayGo" className="h-8 w-auto"/>
+            <img src="/public/images/logos/MiniLogo_WayGo.png" alt="WayGo" className="h-8 w-auto"/>
           </div>
           {(isExpanded || isHovered || isMobileOpen) && (
             <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">DyplomBooking</p>
+              <p className="text-sm font-bold text-gray-900 dark:text-white">WayGo</p>
               <p className="text-xs text-gray-400">Адмін панель</p>
             </div>
           )}

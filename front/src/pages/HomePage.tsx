@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import { destinationApi, housingApi, wishlistApi } from "../api/api";
 import { useAuthStore } from "../store/authStore";
@@ -7,12 +8,12 @@ import { useAuthStore } from "../store/authStore";
 import type { Destination } from "../types/destination";
 import type { Housing } from "../types/housing";
 
-import DestinationDropdown from "../components/Destinations/DestinationDropdown";
+import DestinationDropdown from "../components/DestinationSearch/DestinationDropdown";
 import PopularDestinations from "../components/Destinations/PopularDestinations";
 import Footer from "../components/Footer/Footer";
 import GuestsDropdown from "../components/GuestsDropdown/GuestsDropdown";
+import DateDropdown from "../components/DateSearch/DateDropdown";
 import HousingCard from "../components/HousingCard/HousingCard";
-
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -21,129 +22,41 @@ import HousingCard from "../components/HousingCard/HousingCard";
 const PAGE_SIZE_OPTIONS = [8, 12, 24, 48];
 
 const CATEGORIES = [
-  { key: "all", label: "Всі варіанти" },
-  { key: "Apartment", label: "Квартири" },
-  { key: "House", label: "Будинки" },
-  { key: "Villa", label: "Вілли" },
-  { key: "Studio", label: "Студії" },
-  { key: "Room", label: "Кімнати" },
+  { key: "all", labelKey: "home.categories.all" },
+  { key: "Apartment", labelKey: "home.categories.apartments" },
+  { key: "House", labelKey: "home.categories.houses" },
+  { key: "Villa", labelKey: "home.categories.villas" },
+  { key: "Studio", labelKey: "home.categories.studios" },
+  { key: "Room", labelKey: "home.categories.rooms" },
 ];
-
 
 // ─────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────
 
 const HomePage = () => {
-  // ─────────────────────────────────────────────
-  // AUTH
-  // ─────────────────────────────────────────────
-
-  const isAuthenticated = useAuthStore(
-    (state) => state.isAuthenticated
-  );
-
-
-  // ─────────────────────────────────────────────
-  // WISHLIST
-  // ─────────────────────────────────────────────
-
-  /**
-   * Завантажуємо wishlist тільки для авторизованого користувача.
-   *
-   * Він використовується для визначення стану сердечка
-   * на кожній HousingCard.
-   */
-  const { data: wishlist = [] } = useQuery<Housing[]>({
-    queryKey: ["wishlist"],
-    queryFn: wishlistApi.getAll,
-
-    // Не робимо запит, якщо користувач не авторизований.
-    enabled: isAuthenticated,
-
-    // Не повторюємо запит автоматично при помилці.
-    retry: false,
-
-    // Не оновлюємо wishlist при кожному поверненні у вкладку.
-    refetchOnWindowFocus: false,
-
-    // Вважаємо дані актуальними протягом 5 хвилин.
-    staleTime: 1000 * 60 * 5,
-  });
-
+  const { t } = useTranslation();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // ─────────────────────────────────────────────
   // SEARCH STATE
   // ─────────────────────────────────────────────
 
-  // Місто, яке вже застосоване до пошуку.
   const [city, setCity] = useState("");
-
-  // Значення, яке користувач зараз вводить у поле "Куди?".
   const [cityInput, setCityInput] = useState("");
-
-  // Значення для API-пошуку напрямків після debounce.
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Дати бронювання.
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-
-  // Максимальна ціна.
-  // Поки setter не використовується.
   const [maxPrice] = useState("");
 
-  // Стан dropdown гостей.
+  const [openDestination, setOpenDestination] = useState(false);
+  const [openDates, setOpenDates] = useState(false);
   const [openGuests, setOpenGuests] = useState(false);
 
-  // Активна категорія житла.
   const [category, setCategory] = useState("all");
-
-  // Поточна сторінка пагінації.
   const [page, setPage] = useState(1);
-
-  // Кількість оголошень на сторінці.
   const [pageSize, setPageSize] = useState(12);
-
-  // Стан dropdown напрямків.
-  const [openDestination, setOpenDestination] = useState(false);
-
-
-  // ─────────────────────────────────────────────
-  // REFS
-  // ─────────────────────────────────────────────
-
-  /**
-   * Refs потрібні для визначення кліку поза dropdown.
-   */
-  const destinationRef = useRef<HTMLDivElement>(null);
-  const guestsRef = useRef<HTMLDivElement>(null);
-
-
-  // ─────────────────────────────────────────────
-  // RECENT DESTINATIONS
-  // ─────────────────────────────────────────────
-
-  /**
-   * Останні напрямки зберігаємо в localStorage,
-   * щоб вони залишались після перезавантаження сторінки.
-   */
-  const [recentDestinations, setRecentDestinations] = useState<Destination[]>(
-    () => {
-      try {
-        return JSON.parse(
-          localStorage.getItem("recentDestinations") || "[]"
-        );
-      } catch {
-        return [];
-      }
-    }
-  );
-
-
-  // ─────────────────────────────────────────────
-  // GUESTS
-  // ─────────────────────────────────────────────
+  const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
 
   const [guests, setGuests] = useState({
     adults: 0,
@@ -153,150 +66,160 @@ const HomePage = () => {
     rooms: 0,
   });
 
+  const handlePopularDestinationOpen = (destination: Destination) => {
+    void destinationApi.registerView(destination.id);
+  };
+
+  const registerDestinationView = async (destination: Destination) => {
+    try {
+      await destinationApi.registerView(destination.id);
+    } catch (error) {
+      console.error("Failed to register destination view:", error);
+    }
+  };
 
   // ─────────────────────────────────────────────
-  // DESTINATION SEARCH
+  // REFS
   // ─────────────────────────────────────────────
 
-  /**
-   * Пошук напрямків починається тільки після того,
-   * як користувач ввів мінімум 2 символи.
-   */
+  const destinationRef = useRef<HTMLDivElement>(null);
+  const datesRef = useRef<HTMLDivElement>(null);
+  const guestsRef = useRef<HTMLDivElement>(null);
+
+  // ─────────────────────────────────────────────
+  // RECENT DESTINATIONS
+  // ─────────────────────────────────────────────
+
+  const [recentDestinations, setRecentDestinations] = useState<Destination[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("recentDestinations") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  // ─────────────────────────────────────────────
+  // API QUERIES
+  // ─────────────────────────────────────────────
+
+  const { data: wishlist = [] } = useQuery<Housing[]>({
+    queryKey: ["wishlist"],
+    queryFn: wishlistApi.getAll,
+    enabled: isAuthenticated,
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5,
+  });
+
   const { data: searchedDestinations = [] } = useQuery<Destination[]>({
     queryKey: ["destination-search", searchQuery],
-
     queryFn: () => destinationApi.search(searchQuery),
-
     enabled: searchQuery.length > 1,
-
     retry: false,
   });
 
-
-  // ─────────────────────────────────────────────
-  // POPULAR DESTINATIONS
-  // ─────────────────────────────────────────────
-
-  /**
-   * Популярні напрямки показуються:
-   * - у dropdown до введення пошуку;
-   * - нижче на головній сторінці.
-   */
   const { data: popularDestinations = [] } = useQuery<Destination[]>({
     queryKey: ["popular-destinations"],
     queryFn: destinationApi.getPopular,
   });
 
-
-  // ─────────────────────────────────────────────
-  // HOUSINGS
-  // ─────────────────────────────────────────────
-
-  /**
-   * Основний запит оголошень.
-   *
-   * При зміні міста, ціни або гостей React Query
-   * автоматично виконає новий запит.
-   */
   const {
     data: allHousings,
     isLoading,
     error,
   } = useQuery<Housing[]>({
     queryKey: ["housing", city, maxPrice, guests],
-
     queryFn: () =>
       housingApi.getAll({
         city: city || undefined,
-
-        maxPrice: maxPrice
-          ? Number(maxPrice)
-          : undefined,
-
+        maxPrice: maxPrice ? Number(maxPrice) : undefined,
         minGuests: guests.adults + guests.children,
-
         rooms: guests.rooms,
       }),
   });
 
+  // ─────────────────────────────────────────────
+  // DESTINATION LOCALIZATION
+  // ─────────────────────────────────────────────
+
+  const getDestinationCityName = (destination: Destination) =>
+    t(`destinations.cities.${destination.slug}`, {
+      defaultValue: destination.city,
+    });
+
+  // ─────────────────────────────────────────────
+  // DROPDOWN DESTINATIONS
+  // ─────────────────────────────────────────────
+
+  const dropdownDestinations = useMemo(() => {
+    const query = cityInput.trim().toLocaleLowerCase();
+
+    if (!query) return popularDestinations.slice(0, 5);
+
+    const uniqueDestinations = Array.from(
+      new Map(
+        [...searchedDestinations, ...popularDestinations].map((item) => [
+          item.id,
+          item,
+        ])
+      ).values()
+    );
+
+    return uniqueDestinations.filter((item) => {
+      const backendCity = item.city.toLocaleLowerCase();
+      const localizedCity = getDestinationCityName(item).toLocaleLowerCase();
+
+      return (
+        backendCity.includes(query) ||
+        localizedCity.includes(query)
+      );
+    });
+  }, [cityInput, searchedDestinations, popularDestinations, t]);
 
   // ─────────────────────────────────────────────
   // DESTINATION SELECT
   // ─────────────────────────────────────────────
 
-  /**
-   * Викликається при виборі напрямку із dropdown.
-   */
   const handleDestinationSelect = (destination: Destination) => {
-  // Вставляємо вибране місто у поле пошуку.
-  setCityInput(destination.city);
+    const localizedCity = getDestinationCityName(destination);
 
-  // Одразу застосовуємо місто до пошуку житла.
-  // Через зміну city React Query автоматично виконає новий housingApi.getAll().
-  setCity(destination.city);
-
-  // Закриваємо dropdown.
-  setOpenDestination(false);
-
-  // Після нового пошуку повертаємось на першу сторінку пагінації.
-  setPage(1);
-
-  // Отримуємо попередню історію пошуку.
-  let recent: Destination[] = [];
-
-  try {
-    recent = JSON.parse(
-      localStorage.getItem("recentDestinations") || "[]"
-    );
-  } catch {
-    recent = [];
-  }
-
-  // Додаємо вибране місто на початок,
-  // прибираємо дубль і залишаємо максимум 3.
-  const updated = [
-    destination,
-    ...recent.filter(
-      (item) =>
-        item.city.toLowerCase() !==
-        destination.city.toLowerCase()
-    ),
-  ].slice(0, 3);
-
-  // Зберігаємо історію між перезавантаженнями.
-  localStorage.setItem(
-    "recentDestinations",
-    JSON.stringify(updated)
-  );
-
-  setRecentDestinations(updated);
-};
-
-
-  // ─────────────────────────────────────────────
-  // SAVE RECENT DESTINATION
-  // ─────────────────────────────────────────────
-
-  /**
-   * Якщо користувач ввів місто вручну і воно є
-   * серед popularDestinations — додаємо його
-   * до останніх напрямків.
-   */
-  const saveRecentDestination = (cityName: string) => {
-    const destination = popularDestinations.find(
-      (item) =>
-        item.city.toLowerCase() === cityName.toLowerCase()
-    );
-
-    if (!destination) {
-      return;
-    }
+    setCityInput(localizedCity);
+    setCity(localizedCity);
+    setOpenDestination(false);
+    setPage(1);
 
     const updated = [
       destination,
-      ...recentDestinations.filter(
-        (item) => item.id !== destination.id
-      ),
+      ...recentDestinations.filter((item) => item.id !== destination.id),
+    ].slice(0, 3);
+
+    localStorage.setItem("recentDestinations", JSON.stringify(updated));
+    setRecentDestinations(updated);
+
+    void registerDestinationView(destination);
+  };
+
+  const saveRecentDestination = (cityName: string) => {
+    const query = cityName.trim().toLocaleLowerCase();
+
+    const destination = [
+      ...searchedDestinations,
+      ...popularDestinations,
+    ].find((item) => {
+      const backendCity = item.city.toLocaleLowerCase();
+      const localizedCity = getDestinationCityName(item).toLocaleLowerCase();
+
+      return (
+        backendCity === query ||
+        localizedCity === query
+      );
+    });
+
+    if (!destination) return;
+
+    const updated = [
+      destination,
+      ...recentDestinations.filter((item) => item.id !== destination.id),
     ].slice(0, 3);
 
     localStorage.setItem(
@@ -307,88 +230,67 @@ const HomePage = () => {
     setRecentDestinations(updated);
   };
 
-
   // ─────────────────────────────────────────────
-  // SEARCH
+  // SEARCH / FILTERS
   // ─────────────────────────────────────────────
 
-  /**
-   * При зміні фільтрів повертаємось
-   * на першу сторінку.
-   */
-  const resetPage = () => {
-    setPage(1);
-  };
+  const resetPage = () => setPage(1);
 
-  const handleSearch = () => {
-    saveRecentDestination(cityInput);
+  const handleSearch = async () => {
+    const query = cityInput.trim().toLocaleLowerCase();
 
-    setCity(cityInput);
+    const destination =
+      selectedDestination ??
+      [...searchedDestinations, ...popularDestinations].find((item) => {
+        const backendCity = item.city.toLocaleLowerCase();
+        const localizedCity = getDestinationCityName(item).toLocaleLowerCase();
+
+        return backendCity === query || localizedCity === query;
+      });
+
+    if (destination) {
+      const localizedCity = getDestinationCityName(destination);
+
+      setCityInput(localizedCity);
+      setCity(localizedCity);
+      saveRecentDestination(localizedCity);
+
+      if (!selectedDestination) {
+        await registerDestinationView(destination);
+      }
+    } else {
+      setCity(cityInput.trim());
+    }
+
+    setSelectedDestination(null);
     setOpenDestination(false);
-
     resetPage();
   };
-
-
-  // ─────────────────────────────────────────────
-  // CATEGORY
-  // ─────────────────────────────────────────────
 
   const handleCategory = (key: string) => {
     setCategory(key);
     resetPage();
   };
 
-
-  // ─────────────────────────────────────────────
-  // PAGE SIZE
-  // ─────────────────────────────────────────────
-
   const handlePageSize = (size: number) => {
     setPageSize(size);
     setPage(1);
   };
 
-
   // ─────────────────────────────────────────────
-  // FILTER HOUSINGS
+  // HOUSING FILTER
   // ─────────────────────────────────────────────
 
-  /**
-   * Фільтруємо отримані оголошення за категорією.
-   *
-   * useMemo не дозволяє виконувати фільтрацію
-   * повторно без зміни allHousings або category.
-   */
   const filteredHousings = useMemo(() => {
-    if (!allHousings) {
-      return [];
-    }
+    if (!allHousings) return [];
+    if (category === "all") return allHousings;
 
-    if (category === "all") {
-      return allHousings;
-    }
-
-    return allHousings.filter(
-      (housing) => housing.type === category
-    );
+    return allHousings.filter((housing) => housing.type === category);
   }, [allHousings, category]);
 
   const totalItems = filteredHousings.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
 
-  const totalPages = Math.ceil(
-    totalItems / pageSize
-  );
-
-
-  // ─────────────────────────────────────────────
-  // PAGINATION
-  // ─────────────────────────────────────────────
-
-  /**
-   * Беремо тільки ті оголошення,
-   * які належать до поточної сторінки.
-   */
   const housings = useMemo(() => {
     const start = (page - 1) * pageSize;
 
@@ -398,29 +300,21 @@ const HomePage = () => {
     );
   }, [filteredHousings, page, pageSize]);
 
+  // ─────────────────────────────────────────────
+  // PAGINATION
+  // ─────────────────────────────────────────────
 
-  /**
-   * Формуємо кнопки пагінації.
-   *
-   * Наприклад:
-   * 1 2 3 ... 10
-   */
   const pageNumbers = useMemo(() => {
     const pages: (number | "...")[] = [];
 
     if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
       return pages;
     }
 
     pages.push(1);
 
-    if (page > 3) {
-      pages.push("...");
-    }
+    if (page > 3) pages.push("...");
 
     for (
       let i = Math.max(2, page - 1);
@@ -430,43 +324,29 @@ const HomePage = () => {
       pages.push(i);
     }
 
-    if (page < totalPages - 2) {
-      pages.push("...");
-    }
+    if (page < totalPages - 2) pages.push("...");
 
     pages.push(totalPages);
 
     return pages;
   }, [page, totalPages]);
 
-
   // ─────────────────────────────────────────────
   // DESTINATION DEBOUNCE
   // ─────────────────────────────────────────────
 
-  /**
-   * Не відправляємо API-запит після кожної введеної
-   * літери. Чекаємо 400 мс після завершення вводу.
-   */
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchQuery(cityInput.trim());
     }, 400);
 
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [cityInput]);
-
 
   // ─────────────────────────────────────────────
   // CLICK OUTSIDE DROPDOWNS
   // ─────────────────────────────────────────────
 
-  /**
-   * Закриваємо dropdown напрямків або гостей,
-   * якщо користувач натиснув поза ним.
-   */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -479,6 +359,13 @@ const HomePage = () => {
       }
 
       if (
+        datesRef.current &&
+        !datesRef.current.contains(target)
+      ) {
+        setOpenDates(false);
+      }
+
+      if (
         guestsRef.current &&
         !guestsRef.current.contains(target)
       ) {
@@ -486,19 +373,12 @@ const HomePage = () => {
       }
     };
 
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside
-    );
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside
-      );
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
 
   // ─────────────────────────────────────────────
   // RENDER
@@ -506,263 +386,268 @@ const HomePage = () => {
 
   return (
     <div>
-      {/* ──────────────────────────────────────── */}
-      {/* HERO */}
-      {/* ──────────────────────────────────────── */}
+      {/* ───────────────── HERO ───────────────── */}
 
       <section
         className="
-          relative
-          flex
-          h-[600px]
-          w-full
-          flex-col
-          items-center
-          justify-center
-          overflow-visible
-          bg-cover
-          bg-center
-          bg-no-repeat
+          relative flex min-h-[600px] w-full flex-col
+          items-center justify-center overflow-visible
+          bg-cover bg-center bg-no-repeat
         "
         style={{
           backgroundImage: "url('/images/background.jpg')",
         }}
       >
-        {/* Затемнення фонового зображення */}
-        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0 z-0 bg-black/30" />
 
-        {/* Основний контент hero */}
         <div
           className="
-            relative
-            z-100
-            flex
-            w-full
-            max-w-4xl
-            flex-col
-            items-center
-            gap-6
-            px-4
+            relative z-[100] flex w-full max-w-[1320px]
+            flex-col items-center gap-6 px-4
+            min-[1024px]:px-8
           "
         >
+          {/* Hero title */}
           <h1
             className="
-              text-center
-              text-4xl
-              font-bold
-              text-white
+              text-center text-3xl font-bold text-white
               drop-shadow-lg
-              md:text-5xl
+              min-[1024px]:text-4xl
+              min-[1500px]:text-5xl
             "
           >
-            Шлях до твого відпочинку!
+            {t("home.hero.title")}
           </h1>
 
-          <p className="text-center text-lg text-white/80">
-            Знайди ідеальне місце серед тисяч варіантів
-          </p>
-
-
-          {/* ──────────────────────────────────── */}
-          {/* SEARCH BOX */}
-          {/* ──────────────────────────────────── */}
-
-          {/*
-            Search box має z-index 100.
-
-            Це важливо, щоб dropdown напрямків та гостей
-            знаходився вище sticky categories і HousingCard.
-          */}
-          <div
+          <p
             className="
-              relative
-              z-[100]
-              flex
-              w-full
-              flex-col
-              items-stretch
-              gap-0
-              rounded-2xl
-              bg-white
-              p-2
-              shadow-2xl
-              sm:flex-row
+              text-center text-base text-white/80
+              min-[1024px]:text-lg
             "
           >
-            {/* DESTINATION */}
+            {t("home.hero.subtitle")}
+          </p>
 
-            {/*
-              Цей контейнер є position: relative,
-              тому DestinationDropdown може використовувати
-              position: absolute відносно нього.
-            */}
+          {/* ───────────────── SEARCH ───────────────── */}
+
+          <div
+            className="
+              relative z-20 mx-auto flex w-full max-w-[1256px]
+              flex-col rounded-[20px]
+              bg-white/10 p-3
+              shadow-[0_8px_24px_rgba(0,0,0,0.12)]
+              backdrop-blur-md
+
+              min-[1024px]:h-[82px]
+              min-[1024px]:flex-row
+              min-[1024px]:items-center
+              min-[1024px]:p-1
+
+              min-[1500px]:h-[92px]
+            "
+          >
+            {/* Destination */}
             <div
               ref={destinationRef}
               className="
-                relative
-                z-[110]
-                flex
-                flex-1
-                flex-col
-                border-b
-                border-slate-200
-                px-4
-                py-3
-                sm:border-b-0
-                sm:border-r
+                relative z-30 flex min-h-[72px] min-w-0
+                flex-col justify-center px-5
+
+                min-[1024px]:h-full
+                min-[1024px]:min-h-0
+                min-[1024px]:w-[29%]
+                min-[1024px]:shrink-0
+
+                min-[1500px]:w-[360px]
+                min-[1500px]:px-6
               "
             >
               <span
                 className="
-                  text-xs
-                  font-bold
-                  uppercase
-                  tracking-wide
-                  text-slate-800
+                  text-base font-semibold text-white
+                  min-[1500px]:text-[20px]
+                  min-[1500px]:leading-[25px]
                 "
               >
-                Куди?
+                {t("home.search.where")}
               </span>
 
               <input
                 type="text"
-                placeholder="Напрямок маршруту"
                 value={cityInput}
+                placeholder={t("home.search.destinationPlaceholder")}
                 onFocus={() => {
                   setOpenDestination(true);
+                  setOpenDates(false);
+                  setOpenGuests(false);
                 }}
                 onChange={(e) => {
                   setCityInput(e.target.value);
+                  setSelectedDestination(null);
                   setOpenDestination(true);
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSearch();
-                  }
+                  if (e.key === "Enter") handleSearch();
                 }}
                 className="
-                  mt-0.5
-                  bg-transparent
-                  text-sm
-                  text-slate-600
-                  outline-none
-                  placeholder:text-slate-400
+                  mt-1 w-full bg-transparent
+                  text-base text-white/70
+                  outline-none placeholder:text-white/55
+
+                  min-[1500px]:h-[25px]
+                  min-[1500px]:text-[20px]
+                  min-[1500px]:leading-[25px]
                 "
               />
 
               {openDestination && (
                 <DestinationDropdown
-                  destinations={
-                    cityInput.length > 1
-                      ? searchedDestinations
-                      : popularDestinations.slice(0, 5)
-                  }
+                  destinations={dropdownDestinations}
                   recent={recentDestinations}
                   onSelect={handleDestinationSelect}
                 />
               )}
             </div>
 
-
-            {/* CHECK IN */}
-
+            {/* Divider */}
             <div
               className="
-                flex
-                flex-col
-                border-b
-                border-slate-200
-                px-4
-                py-3
-                sm:border-b-0
-                sm:border-r
+                hidden h-[56px] w-px shrink-0
+                bg-white/70
+                min-[1024px]:block
+                min-[1500px]:h-[64px]
               "
-            >
-              <span className="text-xs font-bold uppercase tracking-wide text-slate-800">
-                Заїзд
-              </span>
+            />
 
-              <input
-                type="date"
-                value={checkIn}
-                onChange={(e) => {
-                  setCheckIn(e.target.value);
-                }}
-                className="
-                  mt-0.5
-                  bg-transparent
-                  text-sm
-                  text-slate-600
-                  outline-none
-                "
-              />
-            </div>
-
-
-            {/* CHECK OUT */}
-
+            {/* Dates */}
             <div
+              ref={datesRef}
               className="
-                flex
-                flex-col
-                border-b
-                border-slate-200
-                px-4
-                py-3
-                sm:border-b-0
-                sm:border-r
+                relative z-30 flex min-h-[72px] min-w-0
+                flex-1 items-center
+                border-t border-white/20
+
+                min-[1024px]:h-full
+                min-[1024px]:min-h-0
+                min-[1024px]:border-0
               "
             >
-              <span className="text-xs font-bold uppercase tracking-wide text-slate-800">
-                Виїзд
-              </span>
-
-              <input
-                type="date"
-                value={checkOut}
-                onChange={(e) => {
-                  setCheckOut(e.target.value);
-                }}
-                className="
-                  mt-0.5
-                  bg-transparent
-                  text-sm
-                  text-slate-600
-                  outline-none
-                "
-              />
-            </div>
-
-
-            {/* GUESTS */}
-
-            <div
-              ref={guestsRef}
-              className="relative z-[110]"
-            >
-              <div
+              <button
+                type="button"
                 onClick={() => {
-                  setOpenGuests((prev) => !prev);
+                  setOpenDates((prev) => !prev);
+                  setOpenDestination(false);
+                  setOpenGuests(false);
                 }}
                 className="
-                  flex
-                  cursor-pointer
-                  flex-col
-                  px-4
-                  py-3
+                  flex h-full w-full flex-col
+                  justify-center px-5 text-left
+                  min-[1024px]:px-6
+                  min-[1500px]:px-8
                 "
               >
-                <span className="text-xs font-bold text-slate-800">
-                  ХТО?
+                <span
+                  className="
+                    text-base font-semibold text-white
+                    min-[1500px]:text-[20px]
+                    min-[1500px]:leading-[25px]
+                  "
+                >
+                  {t("home.search.when")}
                 </span>
 
-                <span className="whitespace-nowrap text-sm text-slate-500">
-                  {guests.adults +
-                    guests.children +
-                    guests.babies}{" "}
-                  гостей · {guests.rooms} номер
+                <span
+                  className="
+                    mt-1 truncate text-base text-white/60
+                    min-[1500px]:text-[20px]
+                    min-[1500px]:leading-[25px]
+                  "
+                >
+                  {checkIn || checkOut
+                    ? `${checkIn || t("home.search.checkInPlaceholder")} – ${
+                        checkOut || t("home.search.checkOutPlaceholder")
+                      }`
+                    : t("home.search.dateRangePlaceholder")}
                 </span>
-              </div>
+              </button>
+
+              {openDates && (
+                <DateDropdown
+                  checkIn={checkIn}
+                  checkOut={checkOut}
+                  onCheckInChange={setCheckIn}
+                  onCheckOutChange={setCheckOut}
+                  onClose={() => setOpenDates(false)}
+                />
+              )}
+            </div>
+
+            {/* Divider */}
+            <div
+              className="
+                hidden h-[56px] w-px shrink-0
+                bg-white/70
+                min-[1024px]:block
+                min-[1500px]:h-[64px]
+              "
+            />
+
+            {/* Guests */}
+            <div
+              ref={guestsRef}
+              className="
+                relative z-30 flex min-h-[72px] min-w-0
+                items-center border-t border-white/20
+
+                min-[1024px]:h-full
+                min-[1024px]:min-h-0
+                min-[1024px]:w-[24%]
+                min-[1024px]:shrink-0
+                min-[1024px]:border-0
+
+                min-[1500px]:w-[300px]
+              "
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setOpenGuests((prev) => !prev);
+                  setOpenDestination(false);
+                  setOpenDates(false);
+                }}
+                className="
+                  flex h-full w-full flex-col
+                  justify-center px-5 text-left
+                  min-[1024px]:px-6
+                  min-[1500px]:px-8
+                "
+              >
+                <span
+                  className="
+                    text-base font-semibold text-white
+                    min-[1500px]:text-[20px]
+                    min-[1500px]:leading-[25px]
+                  "
+                >
+                  {t("home.search.who")}
+                </span>
+
+                <span
+                  className="
+                    mt-1 truncate text-base text-white/55
+                    min-[1500px]:text-[20px]
+                    min-[1500px]:leading-[25px]
+                  "
+                >
+                  {t("home.search.guestsSummary", {
+                    guests:
+                      guests.adults +
+                      guests.children +
+                      guests.babies,
+                    rooms: guests.rooms,
+                  })}
+                </span>
+              </button>
 
               {openGuests && (
                 <GuestsDropdown
@@ -772,80 +657,57 @@ const HomePage = () => {
               )}
             </div>
 
-
-            {/* SEARCH BUTTON */}
-
+            {/* Search button */}
             <button
               type="button"
               onClick={handleSearch}
+              aria-label={t("home.search.searchButton")}
               className="
-                m-1
-                flex
-                items-center
-                justify-center
-                rounded-xl
-                bg-slate-800
-                px-6
-                py-3
-                text-white
-                transition
-                hover:bg-slate-700
+                mt-2 flex h-[52px] w-full shrink-0
+                items-center justify-center
+                rounded-[10px] bg-[#355872]
+                text-white transition
+                hover:bg-[#2d4b62]
+
+                min-[1024px]:ml-3
+                min-[1024px]:mr-2
+                min-[1024px]:mt-0
+                min-[1024px]:w-[72px]
+
+                min-[1500px]:w-[100px]
               "
-              aria-label="Пошук житла"
             >
               <svg
-                className="h-5 w-5"
+                className="
+                  h-6 w-6
+                  min-[1500px]:h-8
+                  min-[1500px]:w-8
+                "
+                viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                viewBox="0 0 24 24"
+                strokeWidth="1.8"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
+                <circle cx="11" cy="11" r="6.5" />
+                <path d="m20 20-4.3-4.3" />
               </svg>
             </button>
           </div>
         </div>
       </section>
 
+      {/* ─────────────── CATEGORIES ─────────────── */}
 
-      {/* ──────────────────────────────────────── */}
-      {/* CATEGORIES */}
-      {/* ──────────────────────────────────────── */}
-
-      {/*
-        z-20 навмисно нижчий за search box (z-100).
-        Тому dropdown буде відкриватись поверх цього меню.
-      */}
-      <div
-        className="
-          sticky
-          top-16
-          z-20
-          border-b
-          border-slate-200
-          bg-white
-        "
-      >
+      <div className="sticky top-16 z-10 border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex gap-8 overflow-x-auto">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.key}
                 type="button"
-                onClick={() => {
-                  handleCategory(cat.key);
-                }}
+                onClick={() => handleCategory(cat.key)}
                 className={`
-                  shrink-0
-                  border-b-2
-                  py-4
-                  text-sm
-                  font-medium
-                  transition
+                  shrink-0 border-b-2 py-4 text-sm font-medium transition
                   ${
                     category === cat.key
                       ? "border-slate-800 text-slate-800"
@@ -853,36 +715,21 @@ const HomePage = () => {
                   }
                 `}
               >
-                {cat.label}
+                {t(cat.labelKey)}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-
-      {/* ──────────────────────────────────────── */}
-      {/* HOUSING LIST */}
-      {/* ──────────────────────────────────────── */}
+      {/* ─────────────── HOUSING LIST ─────────────── */}
 
       <section className="mx-auto max-w-7xl px-6 py-10">
-        {/* Заголовок + кількість елементів */}
-
-        <div
-          className="
-            mb-6
-            flex
-            flex-col
-            gap-3
-            sm:flex-row
-            sm:items-center
-            sm:justify-between
-          "
-        >
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-xl font-bold text-slate-800">
             {city
-              ? `Житло у ${city}`
-              : "Всі доступні варіанти"}
+              ? t("home.housing.inCity", { city })
+              : t("home.housing.allAvailable")}
 
             {totalItems > 0 && (
               <span className="ml-2 text-base font-normal text-slate-400">
@@ -891,12 +738,9 @@ const HomePage = () => {
             )}
           </h2>
 
-
-          {/* Кількість карток на сторінці */}
-
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <span className="hidden sm:block">
-              Показувати по:
+              {t("home.housing.showPerPage")}
             </span>
 
             <div className="flex gap-1">
@@ -904,15 +748,9 @@ const HomePage = () => {
                 <button
                   key={size}
                   type="button"
-                  onClick={() => {
-                    handlePageSize(size);
-                  }}
+                  onClick={() => handlePageSize(size)}
                   className={`
-                    rounded-lg
-                    px-3
-                    py-1.5
-                    font-medium
-                    transition
+                    rounded-lg px-3 py-1.5 font-medium transition
                     ${
                       pageSize === size
                         ? "bg-slate-800 text-white"
@@ -927,88 +765,45 @@ const HomePage = () => {
           </div>
         </div>
 
-
-        {/* ────────────────────────────────────── */}
-        {/* LOADING */}
-        {/* ────────────────────────────────────── */}
-
+        {/* Loading */}
         {isLoading && (
-          <div
-            className="
-              grid
-              grid-cols-1
-              gap-6
-              sm:grid-cols-2
-              lg:grid-cols-3
-              xl:grid-cols-4
-            "
-          >
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[...Array(pageSize)].map((_, index) => (
               <div
                 key={index}
-                className="
-                  h-72
-                  animate-pulse
-                  rounded-2xl
-                  bg-slate-200
-                "
+                className="h-72 animate-pulse rounded-2xl bg-slate-200"
               />
             ))}
           </div>
         )}
 
-
-        {/* ────────────────────────────────────── */}
-        {/* ERROR */}
-        {/* ────────────────────────────────────── */}
-
+        {/* Error */}
         {error && (
           <div className="rounded-xl bg-red-50 p-6 text-center text-red-600">
-            ⚠️ Не вдалося завантажити житло.
+            ⚠️ {t("home.housing.loadError")}
           </div>
         )}
 
+        {/* Empty */}
+        {!isLoading && !error && filteredHousings.length === 0 && (
+          <div className="rounded-xl bg-slate-50 p-12 text-center text-slate-500">
+            <img
+              src="/images/logos/Logo_WayGo.png"
+              alt="WayGo"
+              className="mx-auto mb-3 h-8 w-auto"
+            />
 
-        {/* ────────────────────────────────────── */}
-        {/* EMPTY */}
-        {/* ────────────────────────────────────── */}
+            {t("home.housing.empty")}
+          </div>
+        )}
 
-        {!isLoading &&
-          !error &&
-          filteredHousings.length === 0 && (
-            <div className="rounded-xl bg-slate-50 p-12 text-center text-slate-500">
-              <img
-                src="/images/logos/Logo_WayGo.png"
-                alt="WayGo"
-                className="mx-auto mb-3 h-8 w-auto"
-              />
-
-              За вашим запитом нічого не знайдено
-            </div>
-          )}
-
-
-        {/* ────────────────────────────────────── */}
-        {/* HOUSING CARDS */}
-        {/* ────────────────────────────────────── */}
-
+        {/* Cards */}
         {housings.length > 0 && (
-          <div
-            className="
-              grid
-              grid-cols-1
-              gap-6
-              sm:grid-cols-2
-              lg:grid-cols-3
-              xl:grid-cols-4
-            "
-          >
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {housings.map((housing) => (
               <HousingCard
                 key={housing.id}
                 housing={housing}
-
-                // Перевіряємо, чи знаходиться житло у wishlist.
                 isFavorite={wishlist.some(
                   (item) => item.id === housing.id
                 )}
@@ -1017,63 +812,42 @@ const HomePage = () => {
           </div>
         )}
 
-
-        {/* ────────────────────────────────────── */}
-        {/* PAGINATION */}
-        {/* ────────────────────────────────────── */}
-
+        {/* Pagination */}
         {totalPages > 1 && (
           <div className="mt-10 flex flex-col items-center gap-3">
             <p className="text-sm text-slate-500">
-              Показано{" "}
-              {(page - 1) * pageSize + 1}
-              –
-              {Math.min(page * pageSize, totalItems)}
-              {" "}з{" "}
-              {totalItems}
+              {t("home.pagination.shown", {
+                from: (page - 1) * pageSize + 1,
+                to: Math.min(page * pageSize, totalItems),
+                total: totalItems,
+              })}
             </p>
 
             <div className="flex items-center gap-1">
-              {/* Previous page */}
-
               <button
                 type="button"
-                onClick={() => {
-                  setPage((currentPage) =>
-                    Math.max(1, currentPage - 1)
-                  );
-                }}
+                onClick={() =>
+                  setPage((current) =>
+                    Math.max(1, current - 1)
+                  )
+                }
                 disabled={page === 1}
                 className="
-                  flex
-                  h-9
-                  w-9
-                  items-center
-                  justify-center
-                  rounded-lg
-                  border
-                  border-slate-200
-                  text-slate-600
-                  disabled:opacity-30
+                  flex h-9 w-9 items-center justify-center
+                  rounded-lg border border-slate-200
+                  text-slate-600 disabled:opacity-30
                 "
               >
                 ‹
               </button>
-
-
-              {/* Page numbers */}
 
               {pageNumbers.map((pageNumber, index) =>
                 pageNumber === "..." ? (
                   <span
                     key={`dots-${index}`}
                     className="
-                      flex
-                      h-9
-                      w-9
-                      items-center
-                      justify-center
-                      text-slate-400
+                      flex h-9 w-9 items-center
+                      justify-center text-slate-400
                     "
                   >
                     …
@@ -1082,18 +856,10 @@ const HomePage = () => {
                   <button
                     key={pageNumber}
                     type="button"
-                    onClick={() => {
-                      setPage(pageNumber);
-                    }}
+                    onClick={() => setPage(pageNumber)}
                     className={`
-                      flex
-                      h-9
-                      w-9
-                      items-center
-                      justify-center
-                      rounded-lg
-                      text-sm
-                      font-medium
+                      flex h-9 w-9 items-center justify-center
+                      rounded-lg text-sm font-medium
                       ${
                         page === pageNumber
                           ? "bg-slate-800 text-white"
@@ -1106,30 +872,18 @@ const HomePage = () => {
                 )
               )}
 
-
-              {/* Next page */}
               <button
                 type="button"
-                onClick={() => {
-                  setPage((currentPage) =>
-                    Math.min(
-                      totalPages,
-                      currentPage + 1
-                    )
-                  );
-                }}
+                onClick={() =>
+                  setPage((current) =>
+                    Math.min(totalPages, current + 1)
+                  )
+                }
                 disabled={page === totalPages}
                 className="
-                  flex
-                  h-9
-                  w-9
-                  items-center
-                  justify-center
-                  rounded-lg
-                  border
-                  border-slate-200
-                  text-slate-600
-                  disabled:opacity-30
+                  flex h-9 w-9 items-center justify-center
+                  rounded-lg border border-slate-200
+                  text-slate-600 disabled:opacity-30
                 "
               >
                 ›
@@ -1138,9 +892,8 @@ const HomePage = () => {
           </div>
         )}
       </section>
-      {/* ─────────────────── POPULAR DESTINATIONS ───────────────────*/}
-      <PopularDestinations />
-      {/*─────────────────── FOOTER ───────────────────*/}
+
+      <PopularDestinations onDestinationOpen={handlePopularDestinationOpen} />
       <Footer />
     </div>
   );

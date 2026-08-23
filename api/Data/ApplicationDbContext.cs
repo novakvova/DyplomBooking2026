@@ -1,7 +1,6 @@
 using DyplomBooking2026.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace DyplomBooking2026.Data
 {
@@ -18,12 +17,21 @@ namespace DyplomBooking2026.Data
         public DbSet<HousingBooking> HousingBookings { get; set; } = null!;
         public DbSet<HousingPhoto> HousingPhotos { get; set; } = null!;
         public DbSet<Destination> Destinations { get; set; }
+        public DbSet<UserDestinationView> UserDestinationViews { get; set; } = null!;
+        public DbSet<AppSetting> AppSettings { get; set; } = null!;
         public DbSet<Payment> Payments { get; set; } = null!;
         public DbSet<WishlistItem> WishlistItems { get; set; }
+        public DbSet<Review> Reviews { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // Один користувач може додати конкретне житло
+            // до списку бажань лише один раз.
+            builder.Entity<WishlistItem>()
+                .HasIndex(x => new { x.UserId, x.HousingId })
+                .IsUnique();
 
             // Room → Booking
             builder.Entity<Booking>()
@@ -105,11 +113,6 @@ namespace DyplomBooking2026.Data
                 .HasIndex(p => p.TransactionId)
                 .IsUnique();
 
-            // Налаштовуємо таблицю WishlistItem
-            builder.Entity<WishlistItem>()
-                .HasIndex(x => new { x.UserId, x.HousingId })
-                .IsUnique();
-
             // Налаштовуємо зв'язок WishlistItem -> User.
             builder.Entity<WishlistItem>()
                 .HasOne(x => x.User)
@@ -123,6 +126,41 @@ namespace DyplomBooking2026.Data
                 .WithMany()
                 .HasForeignKey(x => x.HousingId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Review → User
+            // При видаленні користувача видаляємо його відгуки.
+            builder.Entity<Review>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Review → Housing
+            // При видаленні житла видаляємо пов'язані відгуки.
+            builder.Entity<Review>()
+                .HasOne(r => r.Housing)
+                .WithMany()
+                .HasForeignKey(r => r.HousingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Destination → UserDestinationView
+            builder.Entity<UserDestinationView>()
+                .HasOne(x => x.Destination)
+                .WithMany(x => x.UserViews)
+                .HasForeignKey(x => x.DestinationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Destination → перегляди напрямку.
+            builder.Entity<UserDestinationView>()
+                .HasOne(x => x.Destination)
+                .WithMany(x => x.UserViews)
+                .HasForeignKey(x => x.DestinationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Ключ налаштування має бути унікальним.
+            builder.Entity<AppSetting>()
+                .HasIndex(x => x.Key)
+                .IsUnique();
         }
     }
 }

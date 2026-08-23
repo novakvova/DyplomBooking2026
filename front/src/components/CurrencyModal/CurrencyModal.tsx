@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useCurrencyStore } from "../../store/currencyStore";
 
 interface CurrencyModalProps {

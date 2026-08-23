@@ -1,14 +1,21 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5080/api";
+export const API_ORIGIN =
+  import.meta.env.VITE_API_URL || "https://localhost:7080";
 
 const apiClient = axios.create({
-  baseURL: API_URL,
+  baseURL: `${API_ORIGIN}/api`,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+export const getMediaUrl = (path?: string | null) => {
+  if (!path) return "";
+  if (/^https?:\/\//.test(path)) return path;
+
+  return `${API_ORIGIN}${path}`;
+};
 
 // Додаємо JWT до кожного запиту
 apiClient.interceptors.request.use((config) => {
