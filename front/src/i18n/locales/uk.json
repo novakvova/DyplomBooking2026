@@ -39,6 +39,7 @@
 
   "auth": {
     "google": "Увійти через Google",
+    "facebook": "Увійти через Facebook",
     "or": "або",
 
     "googleCallback": {

@@ -3,6 +3,7 @@ using System.Web;
 using DyplomBooking2026.DTOs;
 using DyplomBooking2026.Models;
 using DyplomBooking2026.Services;
+using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -127,15 +128,31 @@ namespace DyplomBooking2026.Controllers
         [HttpGet("google/callback")]
         public async Task<ActionResult<AuthResponseDto>> GoogleCallback()
         {
+            return await CompleteExternalLogin("Google");
+        }
+
+        [HttpGet("facebook/login")]
+        public IActionResult FacebookLogin([FromQuery] string? returnUrl = null)
+        {
+            var redirectUrl = Url.Action(nameof(FacebookCallback), "Auth", new { returnUrl }, Request.Scheme);
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(FacebookDefaults.AuthenticationScheme, redirectUrl);
+            return Challenge(properties, FacebookDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("facebook/callback")]
+        public async Task<ActionResult<AuthResponseDto>> FacebookCallback() => await CompleteExternalLogin("Facebook");
+
+        private async Task<ActionResult<AuthResponseDto>> CompleteExternalLogin(string providerName)
+        {
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
-                return BadRequest("Не вдалося отримати дані від Google.");
+                return BadRequest($"Не вдалося отримати дані від {providerName}.");
 
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
             var name = info.Principal.FindFirstValue(ClaimTypes.Name);
 
             if (string.IsNullOrEmpty(email))
-                return BadRequest("Google не надав email.");
+                return BadRequest($"{providerName} не надав email.");
 
             var user = await _userManager.FindByEmailAsync(email);
 
@@ -145,7 +162,7 @@ namespace DyplomBooking2026.Controllers
                 {
                     UserName = email,
                     Email = email,
-                    FullName = name,
+                FullName = name ?? email,
                     EmailConfirmed = true
                 };
 
@@ -165,8 +182,9 @@ namespace DyplomBooking2026.Controllers
                 await _userManager.AddLoginAsync(user, info);
 
             var response = await BuildAuthResponse(user);
-            var frontendUrl = $"http://localhost:5173/google-callback" +
-                $"?token={Uri.EscapeDataString(response.Token)}" +
+            var frontendUrl = $"http://localhost:5173/oauth-callback" +
+                $"?provider={Uri.EscapeDataString(providerName)}" +
+                $"&token={Uri.EscapeDataString(response.Token)}" +
                 $"&email={Uri.EscapeDataString(response.Email)}" +
                 $"&fullName={Uri.EscapeDataString(response.FullName ?? "")}" +
                 $"&roles={string.Join(",", response.Roles)}";

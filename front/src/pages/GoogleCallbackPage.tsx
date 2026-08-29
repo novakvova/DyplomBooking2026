@@ -41,7 +41,7 @@ const GoogleCallbackPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center">
       <p className="text-slate-500">
-        {t("auth.googleCallback.loading")}
+        {t("auth.googleCallback.loading", "Виконуємо вхід...")}
       </p>
     </div>
   );

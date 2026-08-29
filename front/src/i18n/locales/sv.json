@@ -39,6 +39,7 @@
 
   "auth": {
     "google": "Fortsätt med Google",
+    "facebook": "Fortsätt med Facebook",
     "or": "eller",
 
     "googleCallback": {
