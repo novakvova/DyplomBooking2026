@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 interface HousingRegistrationLayoutProps {
   children: ReactNode;
+  step: 1 | 2 | 3;
   progress: number;
   onBack: () => void;
   onNext?: () => void;
@@ -12,6 +13,7 @@ interface HousingRegistrationLayoutProps {
 
 const HousingRegistrationLayout = ({
   children,
+  step,
   progress,
   onBack,
   onNext,
@@ -21,14 +23,10 @@ const HousingRegistrationLayout = ({
 }: HousingRegistrationLayoutProps) => {
   const safeProgress = Math.min(Math.max(progress, 0), 100);
 
-  const segmentProgress = (segment: number) => {
-    const segmentStart = segment * (100 / 3);
-    const segmentEnd = (segment + 1) * (100 / 3);
-
-    if (safeProgress <= segmentStart) return 0;
-    if (safeProgress >= segmentEnd) return 100;
-
-    return ((safeProgress - segmentStart) / (segmentEnd - segmentStart)) * 100;
+  const getSegmentProgress = (segment: number) => {
+    if (segment < step) return 100;
+    if (segment === step) return safeProgress;
+    return 0;
   };
 
   return (
@@ -57,14 +55,16 @@ const HousingRegistrationLayout = ({
 
         <div className="pb-6">
           <div className="grid grid-cols-3 gap-4">
-            {[0, 1, 2].map((segment) => (
+            {[1, 2, 3].map((segment) => (
               <div
                 key={segment}
                 className="relative h-1 overflow-hidden bg-[#D9DDE0]"
               >
                 <div
                   className="absolute inset-y-0 left-0 bg-[#243C4E] transition-all duration-300"
-                  style={{ width: `${segmentProgress(segment)}%` }}
+                  style={{
+                    width: `${getSegmentProgress(segment)}%`,
+                  }}
                 />
               </div>
             ))}

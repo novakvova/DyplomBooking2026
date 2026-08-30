@@ -60,7 +60,8 @@ const Step02Category = () => {
 
   return (
     <HousingRegistrationLayout
-      progress={8}
+      step={1}
+      progress={15}
       onBack={handleBack}
       onNext={handleNext}
       nextDisabled={!data.category}
