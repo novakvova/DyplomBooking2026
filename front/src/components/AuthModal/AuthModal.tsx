@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 
 import { authApi } from "../../api/api";
+import { API_ORIGIN } from "../../api/client";
 import { useAuthStore } from "../../store/authStore";
 
 interface Props {
@@ -142,7 +143,7 @@ const AuthModal = ({ isOpen, onClose }: Props) => {
           {/* Google login */}
           {tab !== "forgot" && (
             <a
-              href="http://localhost:5080/api/auth/google/login"
+              href={`${API_ORIGIN}/api/auth/google/login`}
               className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -165,6 +166,18 @@ const AuthModal = ({ isOpen, onClose }: Props) => {
               </svg>
 
               {t("auth.google")}
+            </a>
+          )}
+
+          {tab !== "forgot" && (
+            <a
+              href={`${API_ORIGIN}/api/auth/facebook/login`}
+              className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.03 4.39 11.03 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.03 1.79-4.7 4.53-4.7 1.31 0 2.69.24 2.69.24v2.97h-1.52c-1.5 0-1.97.94-1.97 1.9v2.28h3.35l-.54 3.49h-2.81V24C19.61 23.1 24 18.1 24 12.07Z" />
+              </svg>
+              {t("auth.facebook", "Увійти через Facebook")}
             </a>
           )}
 

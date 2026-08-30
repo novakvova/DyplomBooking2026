@@ -142,6 +142,7 @@ function App() {
 
           {/* Google OAuth callback */}
           <Route path="/google-callback" element={<GoogleCallbackPage />} />
+          <Route path="/oauth-callback" element={<GoogleCallbackPage />} />
 
           {/* Admin login */}
           <Route path="/login" element={<LoginPage />} />
