@@ -29,6 +29,14 @@ import Step03PropertyType from "./components/CreateHousing/Step03PropertyType";
 import Step04RentalFormat from "./components/CreateHousing/Step04RentalFormat";
 import Step05AccommodationType from "./components/CreateHousing/Step05AccommodationType";
 import Step06BasicInfo from "./components/CreateHousing/Step06BasicInfo";
+import Step07Bathroom from "./components/CreateHousing/Step07Bathroom";
+import Step08Household from "./components/CreateHousing/Step08Household";
+import Step09ListingIntro from "./components/CreateHousing/Step09ListingIntro";
+import Step10Amenities from "./components/CreateHousing/Step10Amenities";
+import Step11Photos from "./components/CreateHousing/Step11Photos";
+import Step12Title from "./components/CreateHousing/Step12Title";
+import Step13Highlights from "./components/CreateHousing/Step13Highlights";
+import Step14Description from "./components/CreateHousing/Step14Description";
 
 // Admin
 import LoginPage from "./admin/pages/Login";
@@ -131,6 +139,14 @@ function App() {
               <Route path="housing/register/rental-format" element={<Step04RentalFormat />} />
               <Route path="housing/register/accommodation-type" element={<Step05AccommodationType />} />
               <Route path="housing/register/basic-info" element={<Step06BasicInfo />} />
+              <Route path="housing/register/bathroom" element={<Step07Bathroom />} />
+              <Route path="housing/register/household" element={<Step08Household />} />              
+              <Route path="housing/register/listing-intro" element={<Step09ListingIntro />} />
+              <Route path="housing/register/amenities" element={<Step10Amenities />} />
+              <Route path="housing/register/photos" element={<Step11Photos />} />
+              <Route path="housing/register/title" element={<Step12Title />} />
+              <Route path="housing/register/highlights" element={<Step13Highlights />} />
+              <Route path="housing/register/description" element={<Step14Description />} />
 
 
             </Route>

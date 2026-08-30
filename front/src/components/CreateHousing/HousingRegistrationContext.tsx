@@ -31,21 +31,18 @@ export type HousingAccommodationType =
   | "aparthotel"
   | "penthouse"
   | "duplex"
-  
   | "house"
   | "villa"
   | "townhouse"
   | "chalet"
   | "bungalow"
   | "estate"
-  
   | "hotel"
   | "mini_hotel"
   | "hostel"
   | "guest_house"
   | "motel"
   | "glamping"
-  
   | "a_frame"
   | "barnhouse"
   | "tree_house"
@@ -65,7 +62,22 @@ export interface HousingRegistrationData {
   bedrooms: number;
   beds: number;
   bathrooms: number;
+
+  privateBathroomInside: number;
+  privateBathroomOutside: number;
+  sharedBathroom: number;
+
   bedroomLock: BedroomLock | null;
+
+  livesWithHost: boolean;
+  livesWithFamily: boolean;
+  otherGuestsPresent: boolean;
+  petsPresent: boolean;
+
+  title: string;
+  highlights: string[];
+  description: string;
+  amenities: string[];
 }
 
 interface HousingRegistrationContextValue {
@@ -91,7 +103,22 @@ const initialData: HousingRegistrationData = {
   bedrooms: 1,
   beds: 1,
   bathrooms: 1,
+
+  privateBathroomInside: 1,
+  privateBathroomOutside: 0,
+  sharedBathroom: 0,
+
   bedroomLock: null,
+
+  livesWithHost: false,
+  livesWithFamily: false,
+  otherGuestsPresent: false,
+  petsPresent: false,
+  
+  title: "",
+  highlights: [],
+  description: "",
+  amenities: [],
 };
 
 const HousingRegistrationContext =

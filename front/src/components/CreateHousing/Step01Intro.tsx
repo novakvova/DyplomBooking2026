@@ -14,12 +14,13 @@ const Step01Intro = () => {
 
   return (
     <HousingRegistrationLayout
+      step={1}
       progress={0}
       onBack={handleBack}
       onNext={handleNext}
       showHelp={false}
     >
-      <div className="grid w-full grid-cols-1 items-center gap-12 lg:grid-cols-[1fr_320px] lg:gap-20">
+      <div className="grid w-full grid-cols-1 items-center gap-12 lg:grid-cols-[1fr_469px] lg:gap-20">
         <section className="max-w-[774px] lg:ml-20">
           <p className="mb-4 text-xs font-medium text-black">Крок 1</p>
 
@@ -36,7 +37,11 @@ const Step01Intro = () => {
         </section>
 
         <section className="flex justify-center">
-          <div className="h-[192px] w-[220px] rounded-[10px] bg-[#D9D9D9] lg:h-[240px] lg:w-[276px]" />
+          <img
+            src="/images/items/create_housing.jpg"
+            alt="Створення оголошення про помешкання"
+            className="aspect-[469/478] w-full max-w-[469px] rounded-[20px] object-cover"
+          />
         </section>
       </div>
     </HousingRegistrationLayout>
