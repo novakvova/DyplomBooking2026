@@ -105,80 +105,83 @@ const LanguageLayout = () => {
 // App
 // ─────────────────────────────────────────────
 
+import AuthPage from "./pages/AuthPage";
+
 function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Toaster position="top-right" />
+  return <AuthPage />
+  // return (
+  //   <QueryClientProvider client={queryClient}>
+  //     <BrowserRouter>
+  //       <Toaster position="top-right" />
 
-        <Routes>
-          {/* Root */}
-          <Route path="/" element={<Navigate to="/uk" replace />} />
+  //       <Routes>
+  //         {/* Root */}
+  //         <Route path="/" element={<Navigate to="/uk" replace />} />
 
-          {/* Localized public pages */}
-          <Route path="/:lang" element={<LanguageLayout />}>
-            <Route index element={<HomePage />} />
+  //         {/* Localized public pages */}
+  //         <Route path="/:lang" element={<LanguageLayout />}>
+  //           <Route index element={<HomePage />} />
 
-            <Route path="housing" element={<HomePage />} />
-            <Route path="housing/:id" element={<HousingDetailPage />} />
+  //           <Route path="housing" element={<HomePage />} />
+  //           <Route path="housing/:id" element={<HousingDetailPage />} />
 
-            {/* Housing registration flow */}
-            <Route element={<HousingRegistrationProviderLayout />}>
-              <Route path="housing/create" element={<CreateHousingPage />} />
-              <Route path="housing/register" element={<Step01Intro />} />
-              <Route path="housing/register/category" element={<Step02Category />} />
-              <Route path="housing/register/property-type" element={<Step03PropertyType />} />
-              <Route path="housing/register/rental-format" element={<Step04RentalFormat />} />
-              <Route path="housing/register/accommodation-type" element={<Step05AccommodationType />} />
-              <Route path="housing/register/basic-info" element={<Step06BasicInfo />} />
+  //           {/* Housing registration flow */}
+  //           <Route element={<HousingRegistrationProviderLayout />}>
+  //             <Route path="housing/create" element={<CreateHousingPage />} />
+  //             <Route path="housing/register" element={<Step01Intro />} />
+  //             <Route path="housing/register/category" element={<Step02Category />} />
+  //             <Route path="housing/register/property-type" element={<Step03PropertyType />} />
+  //             <Route path="housing/register/rental-format" element={<Step04RentalFormat />} />
+  //             <Route path="housing/register/accommodation-type" element={<Step05AccommodationType />} />
+  //             <Route path="housing/register/basic-info" element={<Step06BasicInfo />} />
 
 
-            </Route>
+  //           </Route>
 
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="booking" element={<BookingPage />} />
-            <Route path="wishlist" element={<WishlistPage />} />
-          </Route>
+  //           <Route path="profile" element={<ProfilePage />} />
+  //           <Route path="booking" element={<BookingPage />} />
+  //           <Route path="wishlist" element={<WishlistPage />} />
+  //         </Route>
 
-          {/* Google OAuth callback */}
-          <Route path="/google-callback" element={<GoogleCallbackPage />} />
+  //         {/* Google OAuth callback */}
+  //         <Route path="/google-callback" element={<GoogleCallbackPage />} />
 
-          {/* Admin login */}
-          <Route path="/login" element={<LoginPage />} />
+  //         {/* Admin login */}
+  //         <Route path="/login" element={<LoginPage />} />
 
-          {/* Admin */}
-          <Route path="/admin">
-            <Route
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<DashboardPage />} />
-              <Route path="users" element={<AdminUsersPage />} />
-              <Route path="users/:id" element={<AdminUserDetailsPage />} />
-              <Route path="housing" element={<AdminHousingPage />} />
-              <Route path="housing/:id" element={<AdminHousingDetailsPage />} />
-              <Route path="bookings" element={<AdminBookingsPage />} />
-              <Route path="bookings/:id" element={<AdminBookingDetailsPage />} />
-              <Route path="destinations" element={<AdminDestinationsPage />} />
-              <Route path="destinations/new" element={<AdminDestinationFormPage />} />
-              <Route path="destinations/:id" element={<AdminDestinationFormPage />} />
-              <Route path="reviews" element={<AdminReviewsPage />} />
-              <Route path="rooms" element={<RoomsPage />} />
-              <Route path="payments" element={<PaymentsPage />} />
+  //         {/* Admin */}
+  //         <Route path="/admin">
+  //           <Route
+  //             element={
+  //               <ProtectedRoute requireAdmin>
+  //                 <AppLayout />
+  //               </ProtectedRoute>
+  //             }
+  //           >
+  //             <Route index element={<DashboardPage />} />
+  //             <Route path="users" element={<AdminUsersPage />} />
+  //             <Route path="users/:id" element={<AdminUserDetailsPage />} />
+  //             <Route path="housing" element={<AdminHousingPage />} />
+  //             <Route path="housing/:id" element={<AdminHousingDetailsPage />} />
+  //             <Route path="bookings" element={<AdminBookingsPage />} />
+  //             <Route path="bookings/:id" element={<AdminBookingDetailsPage />} />
+  //             <Route path="destinations" element={<AdminDestinationsPage />} />
+  //             <Route path="destinations/new" element={<AdminDestinationFormPage />} />
+  //             <Route path="destinations/:id" element={<AdminDestinationFormPage />} />
+  //             <Route path="reviews" element={<AdminReviewsPage />} />
+  //             <Route path="rooms" element={<RoomsPage />} />
+  //             <Route path="payments" element={<PaymentsPage />} />
 
-              <Route path="*" element={<Navigate to="/admin" replace />} />
-            </Route>
-          </Route>
+  //             <Route path="*" element={<Navigate to="/admin" replace />} />
+  //           </Route>
+  //         </Route>
 
-          {/* Unknown URL */}
-          <Route path="*" element={<Navigate to="/uk" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </QueryClientProvider>
-  );
+  //         {/* Unknown URL */}
+  //         <Route path="*" element={<Navigate to="/uk" replace />} />
+  //       </Routes>
+  //     </BrowserRouter>
+  //   </QueryClientProvider>
+  // );
 }
 
 export default App;
