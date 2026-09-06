@@ -25,7 +25,7 @@ public class WishlistFolderController : ControllerBase
         User.FindFirstValue(ClaimTypes.NameIdentifier) ??
         User.FindFirstValue("sub");
 
-    // Перевіряємо, що користувач авторизований.
+    // Перевірка авторизації та отримання ID користувача.
     private bool TryGetUserId(out string userId)
     {
         userId = CurrentUserId ?? string.Empty;
@@ -48,7 +48,9 @@ public class WishlistFolderController : ControllerBase
             {
                 x.Id,
                 x.Name,
+
                 Count = x.Items.Count,
+
                 PreviewImages = x.Items
                     .OrderByDescending(i => i.CreatedAt)
                     .Take(4)
@@ -69,16 +71,20 @@ public class WishlistFolderController : ControllerBase
     }
 
     // GET: api/wishlistfolder/{id}
-    // Отримати папку разом із її помешканнями.
+    // Отримати конкретний список разом із житлом та рейтингами.
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetFolder(int id)
     {
         if (!TryGetUserId(out var userId))
             return Unauthorized();
 
+        // Перевіряємо, що папка належить поточному користувачу,
+        // та отримуємо житло з папки.
         var folder = await _context.WishlistFolders
             .AsNoTracking()
-            .Where(x => x.Id == id && x.UserId == userId)
+            .Where(x =>
+                x.Id == id &&
+                x.UserId == userId)
             .Select(x => new
             {
                 x.Id,
@@ -89,15 +95,23 @@ public class WishlistFolderController : ControllerBase
                     .Select(i => new HousingDto
                     {
                         Id = i.Housing.Id,
+
                         Title = i.Housing.Title,
                         Description = i.Housing.Description,
+
                         Type = i.Housing.Type.ToString(),
+
                         Address = i.Housing.Address,
                         City = i.Housing.City,
+
                         Rooms = i.Housing.Rooms,
                         MaxGuests = i.Housing.MaxGuests,
+
                         PricePerNight = i.Housing.PricePerNight,
+                        PricePerHour = i.Housing.PricePerHour,
+
                         IsAvailable = i.Housing.IsAvailable,
+                        CreatedAt = i.Housing.CreatedAt,
 
                         OwnerName = i.Housing.Owner != null
                             ? i.Housing.Owner.FullName ??
@@ -105,15 +119,17 @@ public class WishlistFolderController : ControllerBase
                               "—"
                             : "—",
 
-                        CreatedAt = i.Housing.CreatedAt,
-
                         MainPhotoPath = i.Housing.Photos
                             .Where(p => p.IsMain)
                             .Select(p => p.FilePath)
                             .FirstOrDefault()
                         ?? i.Housing.Photos
                             .Select(p => p.FilePath)
-                            .FirstOrDefault()
+                            .FirstOrDefault(),
+
+                        // Рейтинг буде отриманий окремим запитом нижче.
+                        AverageRating = 0,
+                        ReviewCount = 0
                     })
                     .ToList()
             })
@@ -122,7 +138,63 @@ public class WishlistFolderController : ControllerBase
         if (folder == null)
             return NotFound("Папку не знайдено.");
 
-        return Ok(folder);
+        // ID житла, яке знаходиться в папці.
+        var housingIds = folder.Items
+            .Select(x => x.Id)
+            .ToList();
+
+        // Якщо папка порожня — повертаємо її одразу.
+        if (housingIds.Count == 0)
+        {
+            return Ok(new
+            {
+                folder.Id,
+                folder.Name,
+                folder.Items
+            });
+        }
+
+        // Отримуємо середній рейтинг та кількість відгуків.
+        // Використовуємо _context.Reviews, тому Housing.Reviews
+        // у моделі Housing не потрібен.
+        var reviewStats = await _context.Reviews
+            .AsNoTracking()
+            .Where(r =>
+                housingIds.Contains(r.HousingId) &&
+                r.IsVisible)
+            .GroupBy(r => r.HousingId)
+            .Select(group => new
+            {
+                HousingId = group.Key,
+
+                AverageRating = group.Average(
+                    r => (double)r.Rating
+                ),
+
+                ReviewCount = group.Count()
+            })
+            .ToDictionaryAsync(
+                x => x.HousingId
+            );
+
+        // Заповнюємо рейтинг кожного житла.
+        foreach (var housing in folder.Items)
+        {
+            if (reviewStats.TryGetValue(
+                    housing.Id,
+                    out var stats))
+            {
+                housing.AverageRating = stats.AverageRating;
+                housing.ReviewCount = stats.ReviewCount;
+            }
+        }
+
+        return Ok(new
+        {
+            folder.Id,
+            folder.Name,
+            folder.Items
+        });
     }
 
     // DELETE: api/wishlistfolder/{folderId}/items/{housingId}
@@ -142,9 +214,11 @@ public class WishlistFolderController : ControllerBase
                 x.UserId == userId);
 
         if (item == null)
+        {
             return NotFound(
                 "Помешкання не знайдено в цьому списку."
             );
+        }
 
         _context.WishlistItems.Remove(item);
 

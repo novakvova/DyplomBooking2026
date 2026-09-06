@@ -12,19 +12,24 @@ interface Props {
   onRemove: () => void;
 }
 
-const WishlistHousingCard = ({ housing, onRemove }: Props) => {
+const WishlistHousingCard = ({
+  housing,
+  onRemove,
+}: Props) => {
   const { i18n } = useTranslation();
   const { convert, currency } = useCurrency();
   const localizedPath = useLocalizedPath();
 
-  const price = convert(housing.pricePerNight).toLocaleString(
-    i18n.language
-  );
+  const price = convert(
+    housing.pricePerNight
+  ).toLocaleString(i18n.language);
+
+  const rating = housing.averageRating ?? 0;
 
   return (
     <Link
       to={localizedPath(`/housing/${housing.id}`)}
-      className="block w-full max-w-[212px] group"
+      className="group block w-full max-w-[212px]"
     >
       <article>
         {/* Фото житла */}
@@ -71,14 +76,16 @@ const WishlistHousingCard = ({ housing, onRemove }: Props) => {
               {housing.title}
             </h3>
 
-            {/* Рейтинг */}
-            <span className="shrink-0 text-sm text-amber-400">
-              ★★★★★
-            </span>
+            {/* Реальний рейтинг */}
+            {housing.reviewCount > 0 && (
+              <span className="shrink-0 text-sm text-amber-400">
+                ★ {rating.toFixed(1)}
+              </span>
+            )}
           </div>
 
           <p className="mt-0.5 text-xs text-slate-500">
-            {housing.city}, Україна
+            {housing.city}
           </p>
 
           {/* Ціна в поточній валюті */}
