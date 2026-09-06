@@ -61,7 +61,7 @@ const Step14Description = () => {
   const handleNext = () => {
     if (!isValid) return;
 
-    navigate("/housing/register/price");
+    navigate("/housing/register/publish-intro");
   };
 
   return (

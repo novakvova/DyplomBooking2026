@@ -374,39 +374,33 @@ export const profileApi = {
 // ─────────────────────────────────────────────
 
 export const wishlistApi = {
+  // Усі унікальні збережені житла.
   getAll: async (): Promise<Housing[]> => {
-    const { data } = await apiClient.get(
-      "/wishlist"
-    );
-
+    const { data } = await apiClient.get("/wishlist");
     return data;
   },
 
-  add: async (
-    housingId: number
-  ): Promise<void> => {
-    await apiClient.post(
-      `/wishlist/${housingId}`
-    );
+  // Додати житло в одну або декілька папок.
+  add: async (housingId: number, folderIds: number[]): Promise<void> => {
+    await apiClient.post("/wishlist/add", {
+      housingId,
+      folderIds,
+    });
   },
 
-  remove: async (
-    housingId: number
-  ): Promise<void> => {
-    await apiClient.delete(
-      `/wishlist/${housingId}`
-    );
+  // Повністю прибрати житло з усіх папок.
+  remove: async (housingId: number): Promise<void> => {
+    await apiClient.delete(`/wishlist/${housingId}`);
   },
 
-  check: async (
-    housingId: number
-  ): Promise<{
-    isFavorite: boolean;
-  }> => {
-    const { data } = await apiClient.get(
-      `/wishlist/${housingId}/check`
-    );
-
+  // Перевірити, чи є житло хоча б в одній папці.
+  check: async (housingId: number): Promise<{ isFavorite: boolean }> => {
+    const { data } = await apiClient.get(`/wishlist/${housingId}/check`);
     return data;
+  },
+
+  // Видалити житло тільки з конкретної папки.
+  removeFromFolder: async (folderId: number, housingId: number): Promise<void> => {
+    await apiClient.delete(`/wishlistfolder/${folderId}/items/${housingId}`);
   },
 };

@@ -1,21 +1,17 @@
 import {
   type ChangeEvent,
   type DragEvent,
-  useEffect,
   useRef,
   useState,
 } from "react";
 import { ImagePlus, MoreHorizontal, Upload, X } from "lucide-react";
 
 import HousingRegistrationLayout from "./HousingRegistrationLayout";
+import {
+  type HousingRegistrationPhoto,
+  useHousingRegistration,
+} from "./HousingRegistrationContext";
 import useLocalizedNavigate from "../../hooks/useLocalizedNavigate";
-
-interface PhotoItem {
-  id: string;
-  file: File;
-  previewUrl: string;
-  description: string;
-}
 
 const MIN_PHOTOS = 5;
 const MAX_PHOTOS = 15;
@@ -23,77 +19,89 @@ const MAX_PHOTOS = 15;
 const Step11Photos = () => {
   const navigate = useLocalizedNavigate();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const createdUrlsRef = useRef<string[]>([]);
 
-  const [photos, setPhotos] = useState<PhotoItem[]>([]);
+  const { photos, setPhotos } = useHousingRegistration();
+
   const [isDragging, setIsDragging] = useState(false);
   const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null);
   const [draftDescription, setDraftDescription] = useState("");
 
-  const editingPhoto = photos.find((photo) => photo.id === editingPhotoId) ?? null;
+  const editingPhoto =
+    photos.find((photo) => photo.id === editingPhotoId) ?? null;
+
   const canContinue = photos.length >= MIN_PHOTOS;
 
-  useEffect(() => {
-    return () => {
-      createdUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, []);
-
   const addFiles = (files: File[]) => {
-    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    const imageFiles = files.filter((file) =>
+      file.type.startsWith("image/")
+    );
+
     if (!imageFiles.length) return;
 
     setPhotos((current) => {
       const remaining = MAX_PHOTOS - current.length;
+
       if (remaining <= 0) return current;
 
-      const nextPhotos = imageFiles.slice(0, remaining).map((file) => {
-        const previewUrl = URL.createObjectURL(file);
-        createdUrlsRef.current.push(previewUrl);
-
-        return {
+      const nextPhotos: HousingRegistrationPhoto[] = imageFiles
+        .slice(0, remaining)
+        .map((file) => ({
           id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
           file,
-          previewUrl,
+          previewUrl: URL.createObjectURL(file),
           description: "",
-        };
-      });
+        }));
 
       return [...current, ...nextPhotos];
     });
   };
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
     addFiles(Array.from(event.target.files ?? []));
     event.target.value = "";
   };
 
-  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (
+    event: DragEvent<HTMLDivElement>
+  ) => {
     event.preventDefault();
     setIsDragging(true);
   };
 
-  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+  const handleDragLeave = (
+    event: DragEvent<HTMLDivElement>
+  ) => {
     event.preventDefault();
-    if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+
+    if (
+      event.relatedTarget &&
+      event.currentTarget.contains(event.relatedTarget as Node)
+    ) {
+      return;
+    }
+
     setIsDragging(false);
   };
 
-  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+  const handleDrop = (
+    event: DragEvent<HTMLDivElement>
+  ) => {
     event.preventDefault();
     setIsDragging(false);
+
     addFiles(Array.from(event.dataTransfer.files));
   };
 
   const handleRemove = (id: string) => {
     setPhotos((current) => {
       const target = current.find((photo) => photo.id === id);
+
       if (target) {
         URL.revokeObjectURL(target.previewUrl);
-        createdUrlsRef.current = createdUrlsRef.current.filter(
-          (url) => url !== target.previewUrl
-        );
       }
+
       return current.filter((photo) => photo.id !== id);
     });
 
@@ -103,7 +111,9 @@ const Step11Photos = () => {
     }
   };
 
-  const openPhotoEditor = (photo: PhotoItem) => {
+  const openPhotoEditor = (
+    photo: HousingRegistrationPhoto
+  ) => {
     setEditingPhotoId(photo.id);
     setDraftDescription(photo.description);
   };
@@ -119,7 +129,10 @@ const Step11Photos = () => {
     setPhotos((current) =>
       current.map((photo) =>
         photo.id === editingPhotoId
-          ? { ...photo, description: draftDescription.trim() }
+          ? {
+              ...photo,
+              description: draftDescription.trim(),
+            }
           : photo
       )
     );
@@ -127,15 +140,25 @@ const Step11Photos = () => {
     closePhotoEditor();
   };
 
-  const handleBack = () => navigate("/housing/register/amenities");
+  const handleBack = () => {
+    navigate("/housing/register/amenities");
+  };
+
   const handleNext = () => {
     if (!canContinue) return;
+
     navigate("/housing/register/title");
   };
 
-  const openFilePicker = () => inputRef.current?.click();
+  const openFilePicker = () => {
+    inputRef.current?.click();
+  };
 
-  const UploadTile = ({ large = false }: { large?: boolean }) => (
+  const UploadTile = ({
+    large = false,
+  }: {
+    large?: boolean;
+  }) => (
     <div
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -144,7 +167,11 @@ const Step11Photos = () => {
         isDragging
           ? "border-[#243C4E] bg-[#F2F7FA]"
           : "border-[#9AA6AE] bg-white"
-      } ${large ? "min-h-[330px] w-full px-6 py-10" : "min-h-[220px] w-full px-5 py-6"}`}
+      } ${
+        large
+          ? "min-h-[330px] w-full px-6 py-10"
+          : "min-h-[220px] w-full px-5 py-6"
+      }`}
     >
       <ImagePlus
         size={large ? 46 : 34}
@@ -152,7 +179,11 @@ const Step11Photos = () => {
         className="text-[#243C4E]"
       />
 
-      <p className={`mt-4 text-center font-medium text-black ${large ? "text-[20px]" : "text-[16px]"}`}>
+      <p
+        className={`mt-4 text-center font-medium text-black ${
+          large ? "text-[20px]" : "text-[16px]"
+        }`}
+      >
         Перетягніть файли сюди
       </p>
 
@@ -175,7 +206,7 @@ const Step11Photos = () => {
     photo,
     large = false,
   }: {
-    photo: PhotoItem;
+    photo: HousingRegistrationPhoto;
     large?: boolean;
   }) => (
     <button
@@ -185,11 +216,16 @@ const Step11Photos = () => {
         openPhotoEditor(photo);
       }}
       className={`absolute flex items-center justify-center rounded-full border border-white/60 bg-[#65747D]/70 text-white backdrop-blur-sm transition hover:bg-[#53626B]/85 ${
-        large ? "right-4 top-4 h-[46px] w-[46px]" : "right-3 top-3 h-9 w-9"
+        large
+          ? "right-4 top-4 h-[46px] w-[46px]"
+          : "right-3 top-3 h-9 w-9"
       }`}
       aria-label="Редагувати фото"
     >
-      <MoreHorizontal size={large ? 24 : 19} strokeWidth={1.8} />
+      <MoreHorizontal
+        size={large ? 24 : 19}
+        strokeWidth={1.8}
+      />
     </button>
   );
 
@@ -211,8 +247,9 @@ const Step11Photos = () => {
             </h1>
 
             <p className="mt-2 max-w-[760px] text-[16px] leading-[1.5] text-[#616D75]">
-              Завантажте щонайменше {MIN_PHOTOS} фотографій, щоб продовжити.
-              Перше фото у списку стане головною обкладинкою.
+              Завантажте щонайменше {MIN_PHOTOS} фотографій, щоб
+              продовжити. Перше фото у списку стане головною
+              обкладинкою.
             </p>
 
             <p className="mt-1 text-[13px] text-[#7D8790]">
@@ -247,7 +284,10 @@ const Step11Photos = () => {
                   Обкладинка
                 </span>
 
-                <PhotoMenuButton photo={photos[0]} large />
+                <PhotoMenuButton
+                  photo={photos[0]}
+                  large
+                />
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -267,14 +307,17 @@ const Step11Photos = () => {
                   </div>
                 ))}
 
-                {photos.length < MAX_PHOTOS && <UploadTile />}
+                {photos.length < MAX_PHOTOS && (
+                  <UploadTile />
+                )}
               </div>
             </div>
           )}
 
           {!canContinue && photos.length > 0 && (
             <p className="mt-4 text-[13px] text-[#7D8790]">
-              Додайте ще {MIN_PHOTOS - photos.length} фото, щоб перейти далі.
+              Додайте ще {MIN_PHOTOS - photos.length} фото, щоб
+              перейти далі.
             </p>
           )}
         </section>
@@ -284,7 +327,9 @@ const Step11Photos = () => {
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 p-4"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) closePhotoEditor();
+            if (event.target === event.currentTarget) {
+              closePhotoEditor();
+            }
           }}
         >
           <div
@@ -294,7 +339,10 @@ const Step11Photos = () => {
             className="w-full max-w-[900px] overflow-hidden rounded-[12px] bg-white shadow-2xl"
           >
             <div className="relative px-7 pb-5 pt-6 text-center">
-              <h2 id="photo-editor-title" className="text-[20px] font-medium text-black">
+              <h2
+                id="photo-editor-title"
+                className="text-[20px] font-medium text-black"
+              >
                 Редагування фото
               </h2>
 
@@ -321,12 +369,17 @@ const Step11Photos = () => {
                 </h3>
 
                 <p className="mt-1 text-[13px] leading-[1.4] text-[#616D75]">
-                  Коротко розкажіть, що зображено на фото та чим це місце особливе.
+                  Коротко розкажіть, що зображено на фото та чим це
+                  місце особливе.
                 </p>
 
                 <textarea
                   value={draftDescription}
-                  onChange={(event) => setDraftDescription(event.target.value.slice(0, 300))}
+                  onChange={(event) =>
+                    setDraftDescription(
+                      event.target.value.slice(0, 300)
+                    )
+                  }
                   rows={7}
                   maxLength={300}
                   className="mt-5 w-full resize-none rounded-[8px] border border-[#7D8790] px-4 py-3 text-[16px] text-black outline-none transition focus:border-[#243C4E] focus:ring-1 focus:ring-[#243C4E]"
@@ -341,7 +394,9 @@ const Step11Photos = () => {
             <div className="flex items-center justify-between border-t border-[#D9DDE0] px-7 py-5">
               <button
                 type="button"
-                onClick={() => handleRemove(editingPhoto.id)}
+                onClick={() =>
+                  handleRemove(editingPhoto.id)
+                }
                 className="rounded-[7px] px-2 py-2 text-[16px] font-medium text-[#616D75] transition hover:text-[#B42318]"
               >
                 Видалити фото

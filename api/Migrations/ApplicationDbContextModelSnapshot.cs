@@ -209,7 +209,50 @@ namespace DyplomBooking2026.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AccommodationType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AdditionalRules")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.PrimitiveCollection<string[]>("Amenities")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<int>("Bathrooms")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BedroomLock")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Bedrooms")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Beds")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BookingMode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("BookingWindowMonths")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CheckInTime")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CheckOutTime")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -223,27 +266,136 @@ namespace DyplomBooking2026.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<string>("EarlyCheckIn")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.PrimitiveCollection<string[]>("Highlights")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<string>("HourlyEndTime")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("HourlyStartTime")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsAvailable")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LivesWithFamily")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LivesWithHost")
                         .HasColumnType("boolean");
 
                     b.Property<int>("MaxGuests")
                         .HasColumnType("integer");
 
+                    b.Property<int>("MinimumStay")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MonthlyDiscountPercent")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("NoiseMonitor")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("NoiseMonitorDescription")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("OtherGuestsPresent")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("OwnerId")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PartiesRule")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PetsPresent")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PetsRule")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PreparationTime")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("PricePerHour")
+                        .HasColumnType("numeric");
+
                     b.Property<decimal>("PricePerNight")
                         .HasColumnType("decimal(10,2)");
 
+                    b.Property<int>("PrivateBathroomInside")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PrivateBathroomOutside")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("PropertySafetyFeatures")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PropertySafetyFeaturesDescription")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PropertyType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("QuietHoursFrom")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("QuietHoursMode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("QuietHoursTo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RentalFormat")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("Rooms")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("SecurityCameras")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SecurityCamerasDescription")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SharedBathroom")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ShortStayDiscountPercent")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SmokingRule")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("WeeklyDiscountPercent")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -481,6 +633,32 @@ namespace DyplomBooking2026.Migrations
                     b.ToTable("UserDestinationViews");
                 });
 
+            modelBuilder.Entity("DyplomBooking2026.Models.WishlistFolder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("WishlistFolders");
+                });
+
             modelBuilder.Entity("DyplomBooking2026.Models.WishlistItem", b =>
                 {
                     b.Property<int>("Id")
@@ -492,6 +670,9 @@ namespace DyplomBooking2026.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("FolderId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("HousingId")
                         .HasColumnType("integer");
 
@@ -501,9 +682,11 @@ namespace DyplomBooking2026.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FolderId");
+
                     b.HasIndex("HousingId");
 
-                    b.HasIndex("UserId", "HousingId")
+                    b.HasIndex("UserId", "HousingId", "FolderId")
                         .IsUnique();
 
                     b.ToTable("WishlistItems");
@@ -756,8 +939,25 @@ namespace DyplomBooking2026.Migrations
                     b.Navigation("Destination");
                 });
 
+            modelBuilder.Entity("DyplomBooking2026.Models.WishlistFolder", b =>
+                {
+                    b.HasOne("DyplomBooking2026.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DyplomBooking2026.Models.WishlistItem", b =>
                 {
+                    b.HasOne("DyplomBooking2026.Models.WishlistFolder", "Folder")
+                        .WithMany("Items")
+                        .HasForeignKey("FolderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("DyplomBooking2026.Models.Housing", "Housing")
                         .WithMany()
                         .HasForeignKey("HousingId")
@@ -769,6 +969,8 @@ namespace DyplomBooking2026.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Folder");
 
                     b.Navigation("Housing");
 
@@ -846,6 +1048,11 @@ namespace DyplomBooking2026.Migrations
             modelBuilder.Entity("DyplomBooking2026.Models.Room", b =>
                 {
                     b.Navigation("Bookings");
+                });
+
+            modelBuilder.Entity("DyplomBooking2026.Models.WishlistFolder", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

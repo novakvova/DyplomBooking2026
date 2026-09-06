@@ -1,8 +1,9 @@
 import HousingRegistrationLayout from "./HousingRegistrationLayout";
 import { useHousingRegistration } from "./HousingRegistrationContext";
 import useLocalizedNavigate from "../../hooks/useLocalizedNavigate";
-import { Dog, User, Users, UsersRound } from "lucide-react";
+import { PawPrint, UserRound, Users, UsersRound,} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+
 
 type HouseholdKey =
   | "livesWithHost"
@@ -22,27 +23,28 @@ const householdOptions: HouseholdOption[] = [
     key: "livesWithHost",
     title: "Проживання з господарем",
     description: "Власник житла мешкає в цьому ж помешканні",
-    icon: User,
+    icon: UserRound,
   },
   {
     key: "livesWithFamily",
     title: "Проживання з родиною",
-    description: "У будинку мешкає господар разом із сім'єю",
-    icon: Users,
+    description: "У будинку мешкає господар разом із сім’єю",
+    icon: UsersRound,
   },
   {
     key: "otherGuestsPresent",
     title: "Інші гості у будинку",
     description: "Сусідні кімнати також здаються іншим мандрівникам",
-    icon: UsersRound,
+    icon: Users,
   },
   {
     key: "petsPresent",
     title: "Домашні улюбленці",
     description: "У помешканні живуть коти або собаки",
-    icon: Dog,
+    icon: PawPrint,
   },
 ];
+
 
 const Step08Household = () => {
   const navigate = useLocalizedNavigate();

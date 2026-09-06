@@ -51,6 +51,20 @@ export type HousingAccommodationType =
 
 export type BedroomLock = "yes" | "no";
 
+export type BookingMode = "manual" | "instant";
+
+export type BinaryRule = "forbidden" | "allowed";
+export type QuietHoursMode = "disabled" | "enabled";
+export type EarlyCheckInOption =
+  | "none"
+  | "subject_to_availability"
+  | "allowed";
+
+export type PreparationTime =
+  | "none"
+  | "one_day"
+  | "manual";
+
 export interface HousingRegistrationData {
   address: HousingAddress | null;
   category: HousingCategory | null;
@@ -77,6 +91,44 @@ export interface HousingRegistrationData {
   title: string;
   highlights: string[];
   description: string;
+  bookingMode: BookingMode | null;
+  pricePerNight: number;
+  pricePerHour: number;
+
+  weeklyDiscountPercent: number;
+  monthlyDiscountPercent: number;
+  shortStayDiscountPercent: number;
+
+  securityCameras: boolean;
+  noiseMonitor: boolean;
+  propertySafetyFeatures: boolean;
+
+  securityCamerasDescription: string;
+  noiseMonitorDescription: string;
+  propertySafetyFeaturesDescription: string;
+
+  checkInTime: string;
+  checkOutTime: string;
+
+  hourlyStartTime: string;
+  hourlyEndTime: string;
+
+  earlyCheckIn: EarlyCheckInOption;
+
+  smokingRule: BinaryRule;
+  petsRule: BinaryRule;
+  partiesRule: BinaryRule;
+
+  quietHoursMode: QuietHoursMode;
+  quietHoursFrom: string;
+  quietHoursTo: string;
+
+  additionalRules: string;
+
+  minimumStay: number;
+  bookingWindowMonths: number;
+  preparationTime: PreparationTime;
+
   amenities: string[];
 }
 
@@ -84,10 +136,20 @@ interface HousingRegistrationContextValue {
   data: HousingRegistrationData;
   updateData: (values: Partial<HousingRegistrationData>) => void;
   resetData: () => void;
+
+  photos: HousingRegistrationPhoto[];
+  setPhotos: React.Dispatch<React.SetStateAction<HousingRegistrationPhoto[]>>;
 }
 
 interface HousingRegistrationProviderProps {
   children: ReactNode;
+}
+
+export interface HousingRegistrationPhoto {
+  id: string;
+  file: File;
+  previewUrl: string;
+  description: string;
 }
 
 const STORAGE_KEY = "waygo-housing-registration";
@@ -118,6 +180,44 @@ const initialData: HousingRegistrationData = {
   title: "",
   highlights: [],
   description: "",
+  bookingMode: null,
+  pricePerNight: 0,
+  pricePerHour: 0,
+
+  weeklyDiscountPercent: 0,
+  monthlyDiscountPercent: 20,
+  shortStayDiscountPercent: 5,
+
+  securityCameras: false,
+  noiseMonitor: false,
+  propertySafetyFeatures: false,
+
+  securityCamerasDescription: "",
+  noiseMonitorDescription: "",
+  propertySafetyFeaturesDescription: "",
+
+  checkInTime: "14:00",
+  checkOutTime: "11:00",
+
+  hourlyStartTime: "09:00",
+  hourlyEndTime: "21:00",
+
+  earlyCheckIn: "none",
+
+  smokingRule: "forbidden",
+  petsRule: "forbidden",
+  partiesRule: "forbidden",
+
+  quietHoursMode: "disabled",
+  quietHoursFrom: "22:00",
+  quietHoursTo: "08:00",
+
+  additionalRules: "",
+
+  minimumStay: 1,
+  bookingWindowMonths: 6,
+  preparationTime: "none",
+
   amenities: [],
 };
 
@@ -156,12 +256,27 @@ export const HousingRegistrationProvider = ({
   };
 
   const resetData = () => {
+    photos.forEach((photo) =>
+      URL.revokeObjectURL(photo.previewUrl)
+    );
+
+    setPhotos([]);
     setData(initialData);
     sessionStorage.removeItem(STORAGE_KEY);
   };
 
+  const [photos, setPhotos] = useState<HousingRegistrationPhoto[]>([]);
+
   return (
-    <HousingRegistrationContext.Provider value={{ data, updateData, resetData }}>
+    <HousingRegistrationContext.Provider
+      value={{
+        data,
+        photos,
+        setPhotos,
+        updateData,
+        resetData,
+      }}
+    >
       {children}
     </HousingRegistrationContext.Provider>
   );
