@@ -12,21 +12,18 @@
     "cancel": "Avbryt",
     "edit": "Redigera"
   },
-
   "header": {
     "navigation": {
       "home": "Hem",
       "housing": "Boenden",
       "bookings": "Mina bokningar"
     },
-
     "actions": {
       "login": "Logga in",
       "language": "Byt språk",
       "currency": "Byt valuta",
       "registerHousing": "Registrera ditt boende"
     },
-
     "profile": {
       "title": "Profil",
       "account": "Mitt konto",
@@ -36,37 +33,31 @@
       "logout": "Logga ut"
     }
   },
-
   "auth": {
     "google": "Fortsätt med Google",
     "facebook": "Fortsätt med Facebook",
     "or": "eller",
-
     "googleCallback": {
       "loading": "Loggar in med Google..."
-    }, 
-
+    },
     "fields": {
       "email": "E-post",
       "password": "Lösenord",
       "fullName": "För- och efternamn",
       "passwordRegister": "Lösenord (minst 6 tecken)"
     },
-
     "login": {
       "title": "Logga in",
       "submit": "Logga in",
       "noAccount": "Har du inget konto? Registrera dig",
       "forgotPassword": "Glömt lösenordet?"
     },
-
     "register": {
       "title": "Registrering",
       "submit": "Registrera dig",
       "loading": "Registrerar...",
       "haveAccount": "Har du redan ett konto? Logga in"
     },
-
     "forgot": {
       "title": "Återställ lösenord",
       "description": "Ange din e-postadress så skickar vi en länk för att återställa lösenordet.",
@@ -74,7 +65,6 @@
       "sending": "Skickar...",
       "back": "Tillbaka till inloggning"
     },
-
     "toast": {
       "welcome": "Välkommen, {{name}}!",
       "invalidCredentials": "Fel e-postadress eller lösenord",
@@ -84,47 +74,37 @@
       "resetError": "Något gick fel. Försök igen."
     }
   },
-
   "languageModal": {
     "popular": "Populäraste språken:",
     "all": "Alla språk:"
   },
-
   "housingDetail": {
     "notFound": "Boendet hittades inte",
     "perNight": "per natt",
     "maxGuests": "max gäster",
     "description": "Beskrivning",
-
     "rooms_one": "rum",
     "rooms_other": "rum",
-
     "wishlist": {
       "add": "Lägg till i önskelistan",
       "remove": "Ta bort från önskelistan"
     },
-
     "photos": {
       "previous": "Föregående bild",
       "next": "Nästa bild"
     },
-
     "booking": {
       "title": "Boka",
       "checkIn": "Incheckning",
       "checkOut": "Utcheckning",
       "guests": "Gäster",
-
       "nights_one": "{{count}} natt",
       "nights_other": "{{count}} nätter",
-
       "total": "Totalt",
       "loginToBook": "🔐 Logga in för att boka",
       "continueToPayment": "Fortsätt till betalning →"
     }
   },
-
-
   "booking": {
     "title": "Slutför din bokning",
     "processing": "Behandlar betalningen...",
@@ -133,17 +113,14 @@
     "checkOut": "Utcheckning",
     "guests": "Gäster",
     "total": "Totalt",
-
     "nights_one": "{{count}} natt",
     "nights_other": "{{count}} nätter",
-
     "paymentMethods": {
       "creditCard": "💳 Kreditkort",
       "debitCard": "💳 Bankkort",
       "paypal": "🅿️ PayPal",
       "bankTransfer": "🏦 Banköverföring"
     },
-
     "card": {
       "title": "Kortuppgifter",
       "number": "Kortnummer",
@@ -153,7 +130,6 @@
       "cvv": "CVV",
       "secure": "Dina uppgifter skyddas med SSL-kryptering"
     },
-
     "validation": {
       "cardNumberRequired": "Ange kortnumret",
       "cardNumberFull": "Ange hela kortnumret",
@@ -161,16 +137,12 @@
       "expiryRequired": "Ange giltighetstiden",
       "cvvRequired": "Ange CVV"
     },
-
     "paypalInfo": "🅿️ Du omdirigeras till PayPal efter bekräftelsen",
     "bankInfo": "🏦 Uppgifter för banköverföring skickas till din e-post",
-
     "payButton": "Bekräfta och betala {{amount}}",
-
     "summary": {
       "title": "Din bokning"
     },
-
     "success": {
       "title": "Bokningen är bekräftad!",
       "transaction": "Transaktion",
@@ -178,20 +150,17 @@
       "myBookings": "Mina bokningar",
       "home": "Till startsidan"
     },
-
     "failed": {
       "title": "Betalningen nekades",
       "description": "Försök igen eller välj en annan betalningsmetod",
       "tryAgain": "Försök igen"
     },
-
     "toast": {
       "success": "Betalningen lyckades! 🎉",
       "paymentDeclined": "Betalningen nekades",
       "bookingError": "Ett fel uppstod vid bokningen"
     }
   },
-
   "wishlist": {
     "title": "Önskelista",
     "subtitle": "Sparade boenden",
@@ -201,7 +170,6 @@
       "description": "Spara boenden du gillar genom att klicka på hjärtikonen."
     }
   },
-
   "housing": {
     "types": {
       "Apartment": "Lägenhet",
@@ -211,51 +179,40 @@
       "Villa": "Villa"
     }
   },
-
   "housingCard": {
     "rooms_one": "{{count}} rum",
     "rooms_other": "{{count}} rum",
-
     "guests_one": "upp till {{count}} gäst",
     "guests_other": "upp till {{count}} gäster",
-
     "perNight": "/ natt",
     "view": "Visa",
-
     "wishlist": {
       "add": "Lägg till i önskelistan",
       "remove": "Ta bort från önskelistan",
       "error": "Det gick inte att uppdatera önskelistan"
     }
   },
-
   "datePicker": {
     "calendar": "Kalender",
     "flexible": "Flexibla datum",
     "select": "Välj",
     "nextMonths": "Nästa månader",
-
     "duration": {
       "title": "Hur länge vill du stanna?",
       "weekend": "Helg",
       "week": "Vecka",
       "month": "Månad"
     },
-
     "months": {
       "title": "När planerar du att resa?",
       "description": "Välj upp till 3 månader"
     }
   },
-
-
-
   "home": {
     "hero": {
       "title": "Vägen till din perfekta semester!",
       "subtitle": "Hitta det perfekta boendet bland tusentals alternativ"
     },
-
     "search": {
       "where": "Vart?",
       "when": "När?",
@@ -269,7 +226,6 @@
       "checkInPlaceholder": "Incheckning",
       "checkOutPlaceholder": "Utcheckning"
     },
-
     "categories": {
       "all": "Alla alternativ",
       "apartments": "Lägenheter",
@@ -278,7 +234,6 @@
       "studios": "Studior",
       "rooms": "Rum"
     },
-
     "housing": {
       "inCity": "Boenden i {{city}}",
       "allAvailable": "Alla tillgängliga alternativ",
@@ -286,26 +241,43 @@
       "loadError": "Det gick inte att ladda boenden.",
       "empty": "Inga resultat hittades för din sökning"
     },
-
     "pagination": {
       "shown": "Visar {{from}}–{{to}} av {{total}}"
+    },
+    "hotDeals": {
+      "title": "Heta rabatter upp till 40%",
+      "subtitle": "Skynda innan det är för sent"
+    },
+    "promo": {
+      "title": "Bästa erbjudandena under högsäsong",
+      "subtitle": "Tryck på knappen och välj din drömsemester!",
+      "button": "Boka nu"
+    },
+    "popularDestinations": {
+      "title": "Populära resmål",
+      "subtitle": "Vart resenärer från Ukraina reser oftast"
+    },
+    "travelCategories": {
+      "title": "Resor av alla slag",
+      "subtitle": "Genomsnittspriser baserade på innevarande kalendermånad",
+      "empty": "Inga boenden i den här kategorin ännu."
+    },
+    "seasonBest": {
+      "title": "Säsongens bästa hotell",
+      "subtitle": "För dig som vill koppla av till 100%"
     }
   },
-
   "createHousing": {
     "title": "Konfigurera din WayGo-annons",
     "subtitle": "Det är enkelt att skapa en bra annons — vi börjar med din adress.",
     "imageAlt": "Registrering av boende på WayGo",
-
     "address": {
       "detectingLocation": "Fastställer din plats...",
       "enterAddress": "Ange din adress",
       "useCurrentLocation": "Använd aktuell plats",
-
       "confirmTitle": "Bekräfta din adress",
       "searchAddress": "Börja skriva en adress",
       "countryNotFound": "Landet hittades inte",
-
       "country": "Land",
       "region": "Region/län",
       "city": "Stad/område",
@@ -313,7 +285,6 @@
       "street": "Gata och husnummer",
       "apartment": "Lägenhet",
       "apartmentShort": "lgh.",
-
       "locationErrors": {
         "notSupported": "Din webbläsare stöder inte geolokalisering.",
         "addressNotFound": "Det gick inte att fastställa adressen.",
@@ -324,18 +295,15 @@
         "unknown": "Ett fel uppstod när din plats skulle fastställas."
       }
     },
-
     "map": {
       "title": "Justera platsen på kartan",
       "description": "Din adress delas med gäster först efter att de har gjort en bokning."
     }
   },
-
   "destinationDropdown": {
     "recent": "Du sökte nyligen efter:",
     "popular": "Populära resmål:"
   },
-  
   "destinations": {
     "countries": {
       "ukraine": "Ukraina",
@@ -343,7 +311,6 @@
       "france": "Frankrike",
       "united kingdom": "Storbritannien"
     },
-
     "cities": {
       "stockholm": "Stockholm",
       "gothenburg": "Göteborg",
@@ -352,7 +319,6 @@
       "linkoping": "Linköping",
       "norrkoping": "Norrköping",
       "valdemarsvik": "Valdemarsvik",
-
       "kyiv": "Kyiv",
       "lviv": "Lviv",
       "odesa": "Odesa",
@@ -362,7 +328,6 @@
       "ivano-frankivsk": "Ivano-Frankivsk",
       "vinnytsia": "Vinnytsia"
     },
-
     "descriptions": {
       "kyiv": "Ukrainas huvudstad med historiska sevärdheter, kultur och modernt stadsliv.",
       "lviv": "En historisk stad känd för sin arkitektur, kafékultur och charmiga gamla stad.",
@@ -372,7 +337,6 @@
       "rivne": "En välkomnande stad i västra Ukraina med gröna parker och kulturella sevärdheter.",
       "ivano-frankivsk": "En mysig stad i västra Ukraina och en populär port till Karpaterna.",
       "vinnytsia": "En trivsam stad i centrala Ukraina med parker, strandpromenad och historisk arkitektur.",
-
       "stockholm": "Sveriges huvudstad, byggd på öar och känd för Gamla stan, museer och vackra vattenmiljöer.",
       "gothenburg": "En livlig västkuststad känd för sina kanaler, skaldjur och närliggande skärgård.",
       "malmo": "En modern stad i södra Sverige känd för parker, arkitektur och närheten till Köpenhamn.",
@@ -383,9 +347,6 @@
       "valdemarsvik": "En charmig kustort i sydöstra Sverige känd för sin skärgård och vackra natur."
     }
   },
-
-
-
   "guestsDropdown": {
     "adults": {
       "title": "Vuxna",
@@ -409,8 +370,6 @@
     "increase": "Öka antal",
     "decrease": "Minska antal"
   },
-
-
   "footer": {
     "general": {
       "title": "Allmän information",
@@ -422,7 +381,6 @@
       "corporateContacts": "Företagskontakt",
       "contentFeedback": "Riktlinjer och klagomål om innehåll"
     },
-
     "policies": {
       "title": "Regler och inställningar",
       "privacy": "Integritetspolicy",
@@ -432,7 +390,6 @@
       "modernSlavery": "Uttalande om modernt slaveri",
       "humanRights": "Uttalande om mänskliga rättigheter"
     },
-
     "other": {
       "title": "Övrigt",
       "carRental": "Biluthyrning",
@@ -440,46 +397,37 @@
       "hotels": "Hotell",
       "seasonalOffers": "Säsongserbjudanden"
     },
-
     "support": {
       "title": "Support",
       "manageTrips": "Hantera dina resor",
       "contact": "Kontakta kundsupport",
       "safety": "Säkerhetscenter"
     },
-
     "bottom": {
       "copyright": "Allt material här © 2005–2026 WayGo Company Pte. Ltd. Alla rättigheter förbehållna.",
       "company": "WayGo är en del av Booking Holdings Inc., en global ledare inom onlineresor och relaterade tjänster."
     }
   },
-
-
   "profile": {
     "title": "Mitt konto",
     "user": "Användare",
     "logout": "Logga ut",
-
     "menu": {
       "personalSecurity": "Personuppgifter och säkerhet",
       "personal": "Personuppgifter",
       "security": "Säkerhetsinställningar",
       "travelers": "Andra resenärer",
-
       "paymentInfo": "Betalningsinformation",
       "bookings": "Mina bokningar",
       "transactions": "Transaktionshistorik",
-
       "notificationsGroup": "Aviseringsinställningar",
       "notifications": "Kommunikation och aviseringar",
       "privacy": "Profilsekretess",
-
       "help": "Hjälp och support",
       "support": "Supportcenter 24/7",
       "complaint": "Skicka en förfrågan / anmälan",
       "requests": "Mina förfrågningar och klagomål"
     },
-
     "fields": {
       "fullName": "För- och efternamn",
       "email": "E-post",
@@ -488,7 +436,6 @@
       "citizenship": "Medborgarskap",
       "address": "Bostadsadress"
     },
-
     "personal": {
       "title": "Personuppgifter",
       "description": "Hantera dina personuppgifter, kontaktuppgifter och status för profilverifiering.",
@@ -497,7 +444,6 @@
       "notVerified": "Inte verifierad",
       "start": "Starta"
     },
-
     "security": {
       "title": "Säkerhetsinställningar",
       "description": "Ändra lösenord eller inloggningsinställningar",
@@ -506,22 +452,18 @@
       "newPassword": "Nytt lösenord",
       "confirmPassword": "Bekräfta lösenord"
     },
-
     "transactions": {
       "title": "Transaktionshistorik",
       "description": "Alla dina betalningar och återbetalningar",
       "empty": "Inga transaktioner ännu"
     },
-
     "bookings": {
       "title": "Mina bokningar",
       "description": "Alla dina aktiva och tidigare bokningar",
       "empty": "Inga bokningar ännu",
-
       "guests_one": "{{count}} gäst",
       "guests_other": "{{count}} gäster"
     },
-
     "paymentStatus": {
       "pending": "Väntar",
       "processing": "Behandlas",
@@ -529,14 +471,12 @@
       "failed": "Nekad",
       "refunded": "Återbetald"
     },
-
     "bookingStatus": {
       "pending": "Väntar",
       "confirmed": "Bekräftad",
       "cancelled": "Avbokad",
       "completed": "Slutförd"
     },
-
     "toast": {
       "saved": "Sparat",
       "saveError": "Det gick inte att spara",
@@ -545,12 +485,9 @@
       "passwordsDoNotMatch": "Lösenorden matchar inte",
       "fieldNotSupported": "Det här fältet stöds ännu inte av API:t"
     },
-
     "comingSoon": {
       "title": "Kommer snart",
       "description": "Den här funktionen kommer snart att vara tillgänglig"
     }
   }
-
-
 }

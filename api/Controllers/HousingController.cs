@@ -67,44 +67,89 @@ public class HousingController : ControllerBase
         var housings = await query
             .ToListAsync(cancellationToken);
 
-        if (housings.Count == 0)
-            return Ok(Array.Empty<HousingDto>());
+        return Ok(await ToDtoListAsync(housings, cancellationToken));
+    }
 
-        var housingIds = housings
-            .Select(h => h.Id)
-            .ToList();
+    /// <summary>
+    /// Секція "Гарячі знижки" на головній сторінці.
+    /// </summary>
+    [HttpGet("hot-deals")]
+    public async Task<ActionResult<IEnumerable<HousingDto>>> GetHotDeals(
+        [FromQuery] int take = 8,
+        CancellationToken cancellationToken = default)
+    {
+        take = Math.Clamp(take, 1, 50);
 
-        var reviewStats = await _context.Reviews
+        var housings = await _context.Housings
             .AsNoTracking()
-            .Where(r =>
-                housingIds.Contains(r.HousingId) &&
-                r.IsVisible)
-            .GroupBy(r => r.HousingId)
-            .Select(group => new
-            {
-                HousingId = group.Key,
-                ReviewCount = group.Count(),
-                AverageRating = group.Average(r => (double)r.Rating)
-            })
-            .ToDictionaryAsync(
-                item => item.HousingId,
-                cancellationToken);
+            .Include(h => h.Owner)
+            .Include(h => h.Photos)
+            .Where(h => h.IsAvailable && h.IsHotDeal)
+            .OrderByDescending(h => h.HotDealDiscountPercent)
+            .Take(take)
+            .ToListAsync(cancellationToken);
 
-        var result = housings
-            .Select(h =>
-            {
-                reviewStats.TryGetValue(
-                    h.Id,
-                    out var stats);
+        return Ok(await ToDtoListAsync(housings, cancellationToken));
+    }
 
-                return ToDto(
-                    h,
-                    stats?.AverageRating ?? 0,
-                    stats?.ReviewCount ?? 0);
-            })
-            .ToList();
+    /// <summary>
+    /// Секція "Найкращі готелі сезону" на головній сторінці.
+    /// </summary>
+    [HttpGet("season-best")]
+    public async Task<ActionResult<IEnumerable<HousingDto>>> GetSeasonBest(
+        [FromQuery] int take = 8,
+        CancellationToken cancellationToken = default)
+    {
+        take = Math.Clamp(take, 1, 50);
 
-        return Ok(result);
+        var housings = await _context.Housings
+            .AsNoTracking()
+            .Include(h => h.Owner)
+            .Include(h => h.Photos)
+            .Where(h => h.IsAvailable && h.IsSeasonBest)
+            .OrderByDescending(h => h.CreatedAt)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        return Ok(await ToDtoListAsync(housings, cancellationToken));
+    }
+
+    /// <summary>
+    /// Секція "Подорожі будь-якого типу": житло за тегом
+    /// категорії подорожі (Пляж/Гори/Лижі/Сім'я/Культура/
+    /// Релаксація — точні значення див. TravelCategories.All).
+    /// </summary>
+    [HttpGet("by-travel-category/{category}")]
+    public async Task<ActionResult<IEnumerable<HousingDto>>> GetByTravelCategory(
+        string category,
+        [FromQuery] int take = 8,
+        CancellationToken cancellationToken = default)
+    {
+        take = Math.Clamp(take, 1, 50);
+
+        var housings = await _context.Housings
+            .AsNoTracking()
+            .Include(h => h.Owner)
+            .Include(h => h.Photos)
+            .Where(h =>
+                h.IsAvailable &&
+                h.TravelCategory == category)
+            .OrderByDescending(h => h.CreatedAt)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        return Ok(await ToDtoListAsync(housings, cancellationToken));
+    }
+
+    /// <summary>
+    /// Список тегів категорій подорожі (Пляж/Гори/Лижі/Сім'я/
+    /// Культура/Релаксація) для вкладок секції "Подорожі
+    /// будь-якого типу" на головній сторінці.
+    /// </summary>
+    [HttpGet("travel-categories")]
+    public ActionResult<IEnumerable<string>> GetTravelCategories()
+    {
+        return Ok(TravelCategories.All);
     }
 
     /// <summary>
@@ -186,7 +231,12 @@ public class HousingController : ControllerBase
             Rooms = dto.Rooms,
             MaxGuests = dto.MaxGuests,
             PricePerNight = dto.PricePerNight,
-            OwnerId = CurrentUserId
+            OwnerId = CurrentUserId,
+
+            TravelCategory = dto.TravelCategory ?? "",
+            IsHotDeal = dto.IsHotDeal,
+            HotDealDiscountPercent = dto.HotDealDiscountPercent,
+            IsSeasonBest = dto.IsSeasonBest
         };
 
         _context.Housings.Add(housing);
@@ -250,6 +300,18 @@ public class HousingController : ControllerBase
 
         if (dto.IsAvailable.HasValue)
             housing.IsAvailable = dto.IsAvailable.Value;
+
+        if (dto.TravelCategory is not null)
+            housing.TravelCategory = dto.TravelCategory;
+
+        if (dto.IsHotDeal.HasValue)
+            housing.IsHotDeal = dto.IsHotDeal.Value;
+
+        if (dto.HotDealDiscountPercent.HasValue)
+            housing.HotDealDiscountPercent = dto.HotDealDiscountPercent.Value;
+
+        if (dto.IsSeasonBest.HasValue)
+            housing.IsSeasonBest = dto.IsSeasonBest.Value;
 
         await _context.SaveChangesAsync(
             cancellationToken);
@@ -428,6 +490,55 @@ public class HousingController : ControllerBase
     // HELPERS / MAPPERS
     // ──────────────────────────────────────────
 
+    /// <summary>
+    /// Мапить список Housing у DTO, підвантажуючи статистику
+    /// відгуків одним груповим запитом (а не по одному на кожне
+    /// житло). Використовується в GetAll і в усіх секціях
+    /// головної сторінки (hot-deals/season-best/by-travel-category),
+    /// щоб не дублювати цю логіку в кожному ендпоінті.
+    /// </summary>
+    private async Task<List<HousingDto>> ToDtoListAsync(
+        List<Housing> housings,
+        CancellationToken cancellationToken)
+    {
+        if (housings.Count == 0)
+            return [];
+
+        var housingIds = housings
+            .Select(h => h.Id)
+            .ToList();
+
+        var reviewStats = await _context.Reviews
+            .AsNoTracking()
+            .Where(r =>
+                housingIds.Contains(r.HousingId) &&
+                r.IsVisible)
+            .GroupBy(r => r.HousingId)
+            .Select(group => new
+            {
+                HousingId = group.Key,
+                ReviewCount = group.Count(),
+                AverageRating = group.Average(r => (double)r.Rating)
+            })
+            .ToDictionaryAsync(
+                item => item.HousingId,
+                cancellationToken);
+
+        return housings
+            .Select(h =>
+            {
+                reviewStats.TryGetValue(
+                    h.Id,
+                    out var stats);
+
+                return ToDto(
+                    h,
+                    stats?.AverageRating ?? 0,
+                    stats?.ReviewCount ?? 0);
+            })
+            .ToList();
+    }
+
     private async Task<(double AverageRating, int ReviewCount)>
         GetReviewStatsAsync(
             int housingId,
@@ -550,7 +661,12 @@ public class HousingController : ControllerBase
 
             MinimumStay = h.MinimumStay,
             BookingWindowMonths = h.BookingWindowMonths,
-            PreparationTime = h.PreparationTime ?? "none"
+            PreparationTime = h.PreparationTime ?? "none",
+
+            TravelCategory = h.TravelCategory ?? "",
+            IsHotDeal = h.IsHotDeal,
+            HotDealDiscountPercent = h.HotDealDiscountPercent,
+            IsSeasonBest = h.IsSeasonBest
         };
 
     private static HousingBookingDto ToBookingDto(

@@ -12,6 +12,14 @@ public class CreateHousingDto
     public int Rooms { get; set; }
     public int MaxGuests { get; set; }
     public decimal PricePerNight { get; set; }
+
+    // Секції головної сторінки — необов'язкові, з розумними
+    // значеннями за замовчуванням (нове житло не потрапляє
+    // в акційні секції автоматично).
+    public string? TravelCategory { get; set; }
+    public bool IsHotDeal { get; set; }
+    public int HotDealDiscountPercent { get; set; }
+    public bool IsSeasonBest { get; set; }
 }
 
 public class UpdateHousingDto
@@ -25,6 +33,11 @@ public class UpdateHousingDto
     public int? MaxGuests { get; set; }
     public decimal? PricePerNight { get; set; }
     public bool? IsAvailable { get; set; }
+
+    public string? TravelCategory { get; set; }
+    public bool? IsHotDeal { get; set; }
+    public int? HotDealDiscountPercent { get; set; }
+    public bool? IsSeasonBest { get; set; }
 }
 
 public class HousingDto
@@ -112,6 +125,12 @@ public class HousingDto
     public int MinimumStay { get; set; } = 1;
     public int BookingWindowMonths { get; set; } = 6;
     public string PreparationTime { get; set; } = "none";
+
+    // Секції головної сторінки.
+    public string TravelCategory { get; set; } = "";
+    public bool IsHotDeal { get; set; }
+    public int HotDealDiscountPercent { get; set; }
+    public bool IsSeasonBest { get; set; }
 }
 
 public class CreateHousingBookingDto

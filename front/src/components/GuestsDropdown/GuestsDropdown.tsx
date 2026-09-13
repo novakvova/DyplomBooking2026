@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Guests {
@@ -15,10 +16,14 @@ interface Props {
   >;
 }
 
-const GuestsDropdown = ({
-  guests,
-  setGuests,
-}: Props) => {
+const GuestsDropdown = forwardRef<HTMLDivElement, Props>(
+(
+  {
+    guests,
+    setGuests,
+  },
+  ref
+) => {
   const { t } = useTranslation();
 
   const updateCount = (
@@ -26,10 +31,8 @@ const GuestsDropdown = ({
     value: number
   ) => {
     setGuests((prev) => {
-      const newValue =
-        prev[key] + value;
+      const newValue = prev[key] + value;
 
-      // Дорослих має бути мінімум 1.
       if (
         key === "adults" &&
         newValue < 1
@@ -39,10 +42,7 @@ const GuestsDropdown = ({
 
       return {
         ...prev,
-        [key]: Math.max(
-          0,
-          newValue
-        ),
+        [key]: Math.max(0, newValue),
       };
     });
   };
@@ -54,41 +54,33 @@ const GuestsDropdown = ({
   }[] = [
     {
       key: "adults",
-      titleKey:
-        "guestsDropdown.adults.title",
-      subtitleKey:
-        "guestsDropdown.adults.subtitle",
+      titleKey: "guestsDropdown.adults.title",
+      subtitleKey: "guestsDropdown.adults.subtitle",
     },
     {
       key: "children",
-      titleKey:
-        "guestsDropdown.children.title",
-      subtitleKey:
-        "guestsDropdown.children.subtitle",
+      titleKey: "guestsDropdown.children.title",
+      subtitleKey: "guestsDropdown.children.subtitle",
     },
     {
       key: "babies",
-      titleKey:
-        "guestsDropdown.babies.title",
-      subtitleKey:
-        "guestsDropdown.babies.subtitle",
+      titleKey: "guestsDropdown.babies.title",
+      subtitleKey: "guestsDropdown.babies.subtitle",
     },
     {
       key: "pets",
-      titleKey:
-        "guestsDropdown.pets.title",
-      subtitleKey:
-        "guestsDropdown.pets.subtitle",
+      titleKey: "guestsDropdown.pets.title",
+      subtitleKey: "guestsDropdown.pets.subtitle",
     },
     {
       key: "rooms",
-      titleKey:
-        "guestsDropdown.rooms.title",
+      titleKey: "guestsDropdown.rooms.title",
     },
   ];
 
   return (
     <div
+      ref={ref}
       className="
         absolute
         right-0
@@ -114,59 +106,30 @@ const GuestsDropdown = ({
           "
         >
           <div>
-            <h3
-              className="
-                text-lg
-                font-medium
-                text-slate-900
-              "
-            >
+            <h3 className="text-lg font-medium text-slate-900">
               {t(item.titleKey)}
             </h3>
 
             {item.subtitleKey && (
-              <p
-                className="
-                  text-sm
-                  text-slate-500
-                "
-              >
-                {t(
-                  item.subtitleKey
-                )}
+              <p className="text-sm text-slate-500">
+                {t(item.subtitleKey)}
               </p>
             )}
           </div>
 
-          <div
-            className="
-              flex
-              items-center
-              gap-3
-              rounded-lg
-              border
-              border-slate-300
-              px-2
-              py-1
-            "
-          >
+          <div className="
+            flex
+            items-center
+            gap-3
+            rounded-lg
+            border
+            border-slate-300
+            px-2
+            py-1
+          ">
             <button
               type="button"
-              onClick={() =>
-                updateCount(
-                  item.key,
-                  -1
-                )
-              }
-              className="
-                text-lg
-                text-slate-700
-                transition
-                hover:text-slate-950
-              "
-              aria-label={t(
-                "guestsDropdown.decrease"
-              )}
+              onClick={() => updateCount(item.key, -1)}
             >
               −
             </button>
@@ -177,21 +140,7 @@ const GuestsDropdown = ({
 
             <button
               type="button"
-              onClick={() =>
-                updateCount(
-                  item.key,
-                  1
-                )
-              }
-              className="
-                text-lg
-                text-slate-700
-                transition
-                hover:text-slate-950
-              "
-              aria-label={t(
-                "guestsDropdown.increase"
-              )}
+              onClick={() => updateCount(item.key, 1)}
             >
               +
             </button>
@@ -200,6 +149,8 @@ const GuestsDropdown = ({
       ))}
     </div>
   );
-};
+});
+
+GuestsDropdown.displayName = "GuestsDropdown";
 
 export default GuestsDropdown;

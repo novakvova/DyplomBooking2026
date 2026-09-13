@@ -813,6 +813,12 @@ namespace DyplomBooking2026.Data
             // старою версією Seeder. Дані користувацьких оголошень не змінюємо.
             await SeedHousingDetailsAsync(context, admin.Id);
 
+            // ── 6.2. Секції головної сторінки ────────────────────────────────
+            // Тегуємо частину вже засіяного тестового житла для секцій
+            // "Гарячі знижки", "Найкращі готелі сезону" та "Подорожі
+            // будь-якого типу" з дизайну головної сторінки.
+            await SeedHomePageSectionsAsync(context);
+
             // ── 7. Destinations ───────────────────────────────────────────────
             if (!context.Destinations.Any())
             {
@@ -1517,6 +1523,102 @@ namespace DyplomBooking2026.Data
                 SetIfDefault(housing, "BookingWindowMonths", 6);
                 SetIfEmpty(housing, "PreparationTime", "none");
             }
+
+            await context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Тегує тестове житло (за Title, ідемпотентно — можна
+        /// викликати при кожному старті) для секцій головної
+        /// сторінки: "Гарячі знижки", "Найкращі готелі сезону",
+        /// "Подорожі будь-якого типу" (TravelCategory).
+        ///
+        /// Використовуємо реальні записи з основного сідера, а не
+        /// вигадані бренди, щоб дані на головній сторінці збігалися
+        /// з тим, що реально відкриється при переході на картку.
+        /// </summary>
+        private static async Task SeedHomePageSectionsAsync(
+            ApplicationDbContext context)
+        {
+            var housings = await context.Housings.ToListAsync();
+
+            if (housings.Count == 0)
+                return;
+
+            var byTitle = housings
+                .GroupBy(h => h.Title)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            void SetHotDeal(string title, int discountPercent)
+            {
+                if (byTitle.TryGetValue(title, out var housing))
+                {
+                    housing.IsHotDeal = true;
+                    housing.HotDealDiscountPercent = discountPercent;
+                }
+            }
+
+            void SetSeasonBest(string title)
+            {
+                if (byTitle.TryGetValue(title, out var housing))
+                    housing.IsSeasonBest = true;
+            }
+
+            void SetTravelCategory(string title, string category)
+            {
+                if (byTitle.TryGetValue(title, out var housing))
+                    housing.TravelCategory = category;
+            }
+
+            // ── "Гарячі знижки до 40%" ──────────────────────────
+            SetHotDeal("Розкішний пентхаус у Дубаї", 40);
+            SetHotDeal("Пляжна вілла на Мальдівах", 25);
+            SetHotDeal("Вілла з басейном на острові", 30);
+            SetHotDeal("Квартира біля Центрального парку", 20);
+
+            // ── "Найкращі готелі сезону" ────────────────────────
+            SetSeasonBest("Квартира біля Сагради Фамілії");
+            SetSeasonBest("Апартаменти в центрі Праги");
+            SetSeasonBest("Стильна квартира в центрі Відня");
+            SetSeasonBest("Квартира біля каналів");
+
+            // ── "Подорожі будь-якого типу" (TravelCategory) ─────
+
+            // Пляж
+            SetTravelCategory("Пляжна вілла на Мальдівах", TravelCategories.Beach);
+            SetTravelCategory("Вілла з басейном на острові", TravelCategories.Beach);
+            SetTravelCategory("Тропічний будинок біля пляжу", TravelCategories.Beach);
+            SetTravelCategory("Вілла біля океану", TravelCategories.Beach);
+
+            // Гори
+            SetTravelCategory("Вілла з терасою в Карпатах", TravelCategories.Mountains);
+            SetTravelCategory("Гірський будинок у Тіролі", TravelCategories.Mountains);
+            SetTravelCategory("Гірський котедж у Шотландії", TravelCategories.Mountains);
+            SetTravelCategory("Скандинавський котедж у фіордах", TravelCategories.Mountains);
+
+            // Лижі
+            SetTravelCategory("Студія біля Альп", TravelCategories.Ski);
+            SetTravelCategory("Квартира біля гірського озера", TravelCategories.Ski);
+            SetTravelCategory("Котедж на березі озера — Закарпаття", TravelCategories.Ski);
+            SetTravelCategory("Будинок біля озера Луїза", TravelCategories.Ski);
+
+            // Сім'я
+            SetTravelCategory("Будинок з басейном у Львові", TravelCategories.Family);
+            SetTravelCategory("Скандинавський будинок біля моря", TravelCategories.Family);
+            SetTravelCategory("Затишний будинок у передмісті", TravelCategories.Family);
+            SetTravelCategory("Будинок у виноградниках", TravelCategories.Family);
+
+            // Культура
+            SetTravelCategory("Затишна квартира біля Колізею", TravelCategories.Culture);
+            SetTravelCategory("Апартаменти з видом на Ейфелеву вежу", TravelCategories.Culture);
+            SetTravelCategory("Квартира біля Вавельського замку", TravelCategories.Culture);
+            SetTravelCategory("Апартаменти біля Гранд-Базару", TravelCategories.Culture);
+
+            // Релаксація
+            SetTravelCategory("Вілла у тропічному стилі", TravelCategories.Relax);
+            SetTravelCategory("Апартаменти біля затоки", TravelCategories.Relax);
+            SetTravelCategory("Мінімалістична квартира біля озера", TravelCategories.Relax);
+            SetTravelCategory("Будиночок біля моря", TravelCategories.Relax);
 
             await context.SaveChangesAsync();
         }

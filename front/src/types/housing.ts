@@ -15,4 +15,9 @@ export interface Housing {
   // Рейтинг та відгуки.
   averageRating: number;
   reviewCount: number;
+  // Секції головної сторінки.
+  travelCategory: string;
+  isHotDeal: boolean;
+  hotDealDiscountPercent: number;
+  isSeasonBest: boolean;
 }

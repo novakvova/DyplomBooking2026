@@ -184,6 +184,42 @@ export const housingApi = {
 
     return data;
   },
+
+  // ── Секції головної сторінки ──────────────────
+
+  getHotDeals: async (take = 8): Promise<Housing[]> => {
+    const { data } = await apiClient.get("/housing/hot-deals", {
+      params: { take },
+    });
+
+    return data;
+  },
+
+  getSeasonBest: async (take = 8): Promise<Housing[]> => {
+    const { data } = await apiClient.get("/housing/season-best", {
+      params: { take },
+    });
+
+    return data;
+  },
+
+  getByTravelCategory: async (
+    category: string,
+    take = 8
+  ): Promise<Housing[]> => {
+    const { data } = await apiClient.get(
+      `/housing/by-travel-category/${encodeURIComponent(category)}`,
+      { params: { take } }
+    );
+
+    return data;
+  },
+
+  getTravelCategories: async (): Promise<string[]> => {
+    const { data } = await apiClient.get("/housing/travel-categories");
+
+    return data;
+  },
 };
 
 // ─────────────────────────────────────────────

@@ -2,29 +2,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-import { destinationApi, housingApi, wishlistApi } from "../api/api";
+import { destinationApi, wishlistApi } from "../api/api";
 import { useAuthStore } from "../store/authStore";
+import useLocalizedNavigate from "../hooks/useLocalizedNavigate";
 
 import type { Destination } from "../types/destination";
 import type { Housing } from "../types/housing";
 
 import DestinationDropdown from "../components/DestinationSearch/DestinationDropdown";
-import PopularDestinations from "../components/Destinations/PopularDestinations";
 import Footer from "../components/Footer/Footer";
 import GuestsDropdown from "../components/GuestsDropdown/GuestsDropdown";
 import DateDropdown from "../components/DateSearch/DateDropdown";
-import HousingCard from "../components/HousingCard/HousingCard";
-
-const PAGE_SIZE_OPTIONS = [8, 12, 24, 48];
-
-const CATEGORIES = [
-  { key: "all", labelKey: "home.categories.all" },
-  { key: "Apartment", labelKey: "home.categories.apartments" },
-  { key: "House", labelKey: "home.categories.houses" },
-  { key: "Villa", labelKey: "home.categories.villas" },
-  { key: "Studio", labelKey: "home.categories.studios" },
-  { key: "Room", labelKey: "home.categories.rooms" },
-];
+import HotDealsSection from "../components/HomeSections/HotDealsSection";
+import PromoBanner from "../components/HomeSections/PromoBanner";
+import PopularDestinationsSection from "../components/HomeSections/PopularDestinationsSection";
+import TravelCategoriesSection from "../components/HomeSections/TravelCategoriesSection";
+import SeasonBestSection from "../components/HomeSections/SeasonBestSection";
 
 const HERO_NAV_ITEMS = [
   { key: "hotels", label: "Готелі" },
@@ -35,6 +28,7 @@ const HERO_NAV_ITEMS = [
 
 const HomePage = () => {
   const { t } = useTranslation();
+  const navigate = useLocalizedNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const [city, setCity] = useState("");
@@ -42,16 +36,12 @@ const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [maxPrice] = useState("");
 
   const [openDestination, setOpenDestination] = useState(false);
   const [openDates, setOpenDates] = useState(false);
   const [openGuests, setOpenGuests] = useState(false);
 
-  const [category, setCategory] = useState("all");
   const [heroNav, setHeroNav] = useState("hotels");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
 
   const [guests, setGuests] = useState({
@@ -65,6 +55,7 @@ const HomePage = () => {
   const destinationRef = useRef<HTMLDivElement>(null);
   const datesRef = useRef<HTMLDivElement>(null);
   const guestsRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [recentDestinations, setRecentDestinations] = useState<Destination[]>(() => {
     try {
@@ -74,16 +65,21 @@ const HomePage = () => {
     }
   });
 
-  const handlePopularDestinationOpen = (destination: Destination) => {
-    void destinationApi.registerView(destination.id);
-  };
-
   const registerDestinationView = async (destination: Destination) => {
     try {
       await destinationApi.registerView(destination.id);
     } catch (error) {
       console.error("Failed to register destination view:", error);
     }
+  };
+
+  // Каталог житла з фільтрами й пагінацією живе окремо на /housing
+  // (HousingListPage + useHousingList) — головна сторінка більше не
+  // дублює його інлайн, а лише веде туди з обраним містом.
+  const goToHousingList = (cityName?: string) => {
+    navigate("/housing", {
+      state: cityName ? { city: cityName } : undefined,
+    });
   };
 
   const { data: wishlist = [] } = useQuery<Housing[]>({
@@ -105,21 +101,6 @@ const HomePage = () => {
   const { data: popularDestinations = [] } = useQuery<Destination[]>({
     queryKey: ["popular-destinations"],
     queryFn: destinationApi.getPopular,
-  });
-
-  const {
-    data: allHousings,
-    isLoading,
-    error,
-  } = useQuery<Housing[]>({
-    queryKey: ["housing", city, maxPrice, guests],
-    queryFn: () =>
-      housingApi.getAll({
-        city: city || undefined,
-        maxPrice: maxPrice ? Number(maxPrice) : undefined,
-        minGuests: guests.adults + guests.children,
-        rooms: guests.rooms,
-      }),
   });
 
   const getDestinationCityName = (destination: Destination) =>
@@ -152,7 +133,6 @@ const HomePage = () => {
     setCityInput(localizedCity);
     setCity(localizedCity);
     setOpenDestination(false);
-    setPage(1);
 
     const updated = [
       destination,
@@ -186,8 +166,6 @@ const HomePage = () => {
     setRecentDestinations(updated);
   };
 
-  const resetPage = () => setPage(1);
-
   const handleSearch = async () => {
     const query = cityInput.trim().toLocaleLowerCase();
 
@@ -200,76 +178,25 @@ const HomePage = () => {
         return backendCity === query || localizedCity === query;
       });
 
-    if (destination) {
-      const localizedCity = getDestinationCityName(destination);
+    let resolvedCity = cityInput.trim();
 
-      setCityInput(localizedCity);
-      setCity(localizedCity);
-      saveRecentDestination(localizedCity);
+    if (destination) {
+      resolvedCity = getDestinationCityName(destination);
+      saveRecentDestination(resolvedCity);
 
       if (!selectedDestination) {
         await registerDestinationView(destination);
       }
-    } else {
-      setCity(cityInput.trim());
     }
 
+    setCity(resolvedCity);
     setSelectedDestination(null);
     setOpenDestination(false);
-    resetPage();
+
+    // Результати пошуку тепер показуються на окремій сторінці
+    // каталогу, а не інлайн на головній.
+    goToHousingList(resolvedCity || undefined);
   };
-
-  const handleCategory = (key: string) => {
-    setCategory(key);
-    resetPage();
-  };
-
-  const handlePageSize = (size: number) => {
-    setPageSize(size);
-    setPage(1);
-  };
-
-  const filteredHousings = useMemo(() => {
-    if (!allHousings) return [];
-    if (category === "all") return allHousings;
-
-    return allHousings.filter((housing) => housing.type === category);
-  }, [allHousings, category]);
-
-  const totalItems = filteredHousings.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-
-  const housings = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredHousings.slice(start, start + pageSize);
-  }, [filteredHousings, page, pageSize]);
-
-  const pageNumbers = useMemo(() => {
-    const pages: (number | "...")[] = [];
-
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-      return pages;
-    }
-
-    pages.push(1);
-
-    if (page > 3) pages.push("...");
-
-    for (
-      let i = Math.max(2, page - 1);
-      i <= Math.min(totalPages - 1, page + 1);
-      i++
-    ) {
-      pages.push(i);
-    }
-
-    if (page < totalPages - 2) pages.push("...");
-
-    pages.push(totalPages);
-
-    return pages;
-  }, [page, totalPages]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -302,6 +229,18 @@ const HomePage = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      dropdownRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [openDestination, openDates, openGuests]);
 
   return (
     <div>
@@ -440,6 +379,7 @@ const HomePage = () => {
 
               {openDestination && (
                 <DestinationDropdown
+                  ref={dropdownRef}
                   destinations={dropdownDestinations}
                   recent={recentDestinations}
                   onSelect={handleDestinationSelect}
@@ -585,7 +525,7 @@ const HomePage = () => {
               </button>
 
               {openGuests && (
-                <GuestsDropdown guests={guests} setGuests={setGuests} />
+                <GuestsDropdown ref={dropdownRef} guests={guests} setGuests={setGuests} />
               )}
             </div>
 
@@ -629,191 +569,28 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ─────────────── CATEGORIES ─────────────── */}
+      {/* ─────────────── HOT DEALS ─────────────── */}
+      <HotDealsSection wishlist={wishlist} />
 
-      <div className="sticky top-16 z-10 border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="flex gap-8 overflow-x-auto">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.key}
-                type="button"
-                onClick={() => handleCategory(cat.key)}
-                className={`
-                  shrink-0 border-b-2 py-4 text-sm font-medium transition
-                  ${
-                    category === cat.key
-                      ? "border-slate-800 text-slate-800"
-                      : "border-transparent text-slate-500 hover:text-slate-800"
-                  }
-                `}
-              >
-                {t(cat.labelKey)}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* ─────────────── PROMO BANNER ─────────────── */}
+      <div className="py-4">
+        <PromoBanner onBrowseClick={() => goToHousingList()} />
       </div>
 
-      {/* ─────────────── HOUSING LIST ─────────────── */}
+      {/* ─────────────── POPULAR DESTINATIONS ─────────────── */}
+      <PopularDestinationsSection
+        onDestinationSelect={(destination) => {
+          handleDestinationSelect(destination);
+          goToHousingList(getDestinationCityName(destination));
+        }}
+      />
 
-      <section className="mx-auto max-w-7xl px-6 py-10">
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-xl font-bold text-slate-800">
-            {city
-              ? t("home.housing.inCity", { city })
-              : t("home.housing.allAvailable")}
+      {/* ─────────────── TRAVEL CATEGORIES ─────────────── */}
+      <TravelCategoriesSection wishlist={wishlist} />
 
-            {totalItems > 0 && (
-              <span className="ml-2 text-base font-normal text-slate-400">
-                ({totalItems})
-              </span>
-            )}
-          </h2>
+      {/* ─────────────── SEASON BEST ─────────────── */}
+      <SeasonBestSection wishlist={wishlist} />
 
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="hidden sm:block">
-              {t("home.housing.showPerPage")}
-            </span>
-
-            <div className="flex gap-1">
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => handlePageSize(size)}
-                  className={`
-                    rounded-lg px-3 py-1.5 font-medium transition
-                    ${
-                      pageSize === size
-                        ? "bg-slate-800 text-white"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                    }
-                  `}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {isLoading && (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {[...Array(pageSize)].map((_, index) => (
-              <div
-                key={index}
-                className="h-72 animate-pulse rounded-2xl bg-slate-200"
-              />
-            ))}
-          </div>
-        )}
-
-        {error && (
-          <div className="rounded-xl bg-red-50 p-6 text-center text-red-600">
-            ⚠️ {t("home.housing.loadError")}
-          </div>
-        )}
-
-        {!isLoading && !error && filteredHousings.length === 0 && (
-          <div className="rounded-xl bg-slate-50 p-12 text-center text-slate-500">
-            <img
-              src="/images/logos/Logo_WayGo.png"
-              alt="WayGo"
-              className="mx-auto mb-3 h-8 w-auto"
-            />
-
-            {t("home.housing.empty")}
-          </div>
-        )}
-
-        {housings.length > 0 && (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {housings.map((housing) => (
-              <HousingCard
-                key={housing.id}
-                housing={housing}
-                isFavorite={wishlist.some((item) => item.id === housing.id)}
-              />
-            ))}
-          </div>
-        )}
-
-        {totalPages > 1 && (
-          <div className="mt-10 flex flex-col items-center gap-3">
-            <p className="text-sm text-slate-500">
-              {t("home.pagination.shown", {
-                from: (page - 1) * pageSize + 1,
-                to: Math.min(page * pageSize, totalItems),
-                total: totalItems,
-              })}
-            </p>
-
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
-                disabled={page === 1}
-                className="
-                  flex h-9 w-9 items-center justify-center
-                  rounded-lg border border-slate-200
-                  text-slate-600 disabled:opacity-30
-                "
-              >
-                ‹
-              </button>
-
-              {pageNumbers.map((pageNumber, index) =>
-                pageNumber === "..." ? (
-                  <span
-                    key={`dots-${index}`}
-                    className="
-                      flex h-9 w-9 items-center
-                      justify-center text-slate-400
-                    "
-                  >
-                    …
-                  </span>
-                ) : (
-                  <button
-                    key={pageNumber}
-                    type="button"
-                    onClick={() => setPage(pageNumber)}
-                    className={`
-                      flex h-9 w-9 items-center justify-center
-                      rounded-lg text-sm font-medium
-                      ${
-                        page === pageNumber
-                          ? "bg-slate-800 text-white"
-                          : "border border-slate-200 text-slate-600"
-                      }
-                    `}
-                  >
-                    {pageNumber}
-                  </button>
-                )
-              )}
-
-              <button
-                type="button"
-                onClick={() =>
-                  setPage((current) => Math.min(totalPages, current + 1))
-                }
-                disabled={page === totalPages}
-                className="
-                  flex h-9 w-9 items-center justify-center
-                  rounded-lg border border-slate-200
-                  text-slate-600 disabled:opacity-30
-                "
-              >
-                ›
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-
-      <PopularDestinations onDestinationOpen={handlePopularDestinationOpen} />
       <Footer />
     </div>
   );

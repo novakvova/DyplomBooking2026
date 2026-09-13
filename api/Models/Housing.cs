@@ -5,6 +5,7 @@ namespace DyplomBooking2026.Models
         // Квартири
         Apartment,
         Studio,
+
         Loft,
         Aparthotel,
         Penthouse,
@@ -114,6 +115,15 @@ namespace DyplomBooking2026.Models
         public int MinimumStay { get; set; } = 1;
         public int BookingWindowMonths { get; set; } = 6;
         public string PreparationTime { get; set; } = "none";
+
+        public string TravelCategory { get; set; } = "";
+
+        // Показувати в секції "Гарячі знижки до 40%".
+        public bool IsHotDeal { get; set; }
+        public int HotDealDiscountPercent { get; set; }
+
+        // Показувати в секції "Найкращі готелі сезону".
+        public bool IsSeasonBest { get; set; }
 
 
         public ICollection<HousingBooking> Bookings { get; set; } = new List<HousingBooking>();

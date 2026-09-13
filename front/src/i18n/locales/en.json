@@ -12,21 +12,18 @@
     "cancel": "Cancel",
     "edit": "Edit"
   },
-
   "header": {
     "navigation": {
       "home": "Home",
       "housing": "Stays",
       "bookings": "My bookings"
     },
-
     "actions": {
       "login": "Sign in",
       "language": "Change language",
       "currency": "Change currency",
       "registerHousing": "List your property"
     },
-
     "profile": {
       "title": "Profile",
       "account": "My account",
@@ -36,37 +33,31 @@
       "logout": "Sign out"
     }
   },
-
   "auth": {
     "google": "Continue with Google",
     "facebook": "Continue with Facebook",
     "or": "or",
-
     "googleCallback": {
       "loading": "Signing in with Google..."
     },
-
     "fields": {
       "email": "Email",
       "password": "Password",
       "fullName": "Full name",
       "passwordRegister": "Password (minimum 6 characters)"
     },
-
     "login": {
       "title": "Sign in",
       "submit": "Sign in",
       "noAccount": "Don't have an account? Sign up",
       "forgotPassword": "Forgot password?"
     },
-
     "register": {
       "title": "Sign up",
       "submit": "Create account",
       "loading": "Creating account...",
       "haveAccount": "Already have an account? Sign in"
     },
-
     "forgot": {
       "title": "Reset password",
       "description": "Enter your email and we'll send you a password reset link.",
@@ -74,7 +65,6 @@
       "sending": "Sending...",
       "back": "Back to sign in"
     },
-
     "toast": {
       "welcome": "Welcome, {{name}}!",
       "invalidCredentials": "Incorrect email or password",
@@ -84,47 +74,37 @@
       "resetError": "Something went wrong. Please try again."
     }
   },
-
   "languageModal": {
     "popular": "Most popular languages:",
     "all": "All languages:"
   },
-
   "housingDetail": {
     "notFound": "Property not found",
     "perNight": "per night",
     "maxGuests": "max guests",
     "description": "Description",
-
     "rooms_one": "room",
     "rooms_other": "rooms",
-
     "wishlist": {
       "add": "Add to wishlist",
       "remove": "Remove from wishlist"
     },
-
     "photos": {
       "previous": "Previous photo",
       "next": "Next photo"
     },
-
     "booking": {
       "title": "Book",
       "checkIn": "Check-in",
       "checkOut": "Check-out",
       "guests": "Guests",
-
       "nights_one": "{{count}} night",
       "nights_other": "{{count}} nights",
-
       "total": "Total",
       "loginToBook": "🔐 Sign in to book",
       "continueToPayment": "Continue to payment →"
     }
   },
-
-  
   "booking": {
     "title": "Complete your booking",
     "processing": "Processing payment...",
@@ -133,17 +113,14 @@
     "checkOut": "Check-out",
     "guests": "Guests",
     "total": "Total",
-
     "nights_one": "{{count}} night",
     "nights_other": "{{count}} nights",
-
     "paymentMethods": {
       "creditCard": "💳 Credit card",
       "debitCard": "💳 Debit card",
       "paypal": "🅿️ PayPal",
       "bankTransfer": "🏦 Bank transfer"
     },
-
     "card": {
       "title": "Card details",
       "number": "Card number",
@@ -153,7 +130,6 @@
       "cvv": "CVV",
       "secure": "Your data is protected with SSL encryption"
     },
-
     "validation": {
       "cardNumberRequired": "Enter your card number",
       "cardNumberFull": "Enter the full card number",
@@ -161,16 +137,12 @@
       "expiryRequired": "Enter the expiry date",
       "cvvRequired": "Enter the CVV"
     },
-
     "paypalInfo": "🅿️ You will be redirected to PayPal after confirmation",
     "bankInfo": "🏦 Bank transfer details will be sent to your email",
-
     "payButton": "Confirm and pay {{amount}}",
-
     "summary": {
       "title": "Your booking"
     },
-
     "success": {
       "title": "Booking confirmed!",
       "transaction": "Transaction",
@@ -178,20 +150,17 @@
       "myBookings": "My bookings",
       "home": "Go to home"
     },
-
     "failed": {
       "title": "Payment declined",
       "description": "Try again or choose another payment method",
       "tryAgain": "Try again"
     },
-
     "toast": {
       "success": "Payment successful! 🎉",
       "paymentDeclined": "Payment declined",
       "bookingError": "Booking error"
     }
   },
-
   "wishlist": {
     "title": "Wishlist",
     "subtitle": "Saved properties",
@@ -201,8 +170,6 @@
       "description": "Save properties you like by clicking the heart icon."
     }
   },
-
-
   "housing": {
     "types": {
       "Apartment": "Apartment",
@@ -212,51 +179,40 @@
       "Villa": "Villa"
     }
   },
-
   "housingCard": {
     "rooms_one": "{{count}} room",
     "rooms_other": "{{count}} rooms",
-
     "guests_one": "up to {{count}} guest",
     "guests_other": "up to {{count}} guests",
-
     "perNight": "/ night",
     "view": "View",
-
     "wishlist": {
       "add": "Add to wishlist",
       "remove": "Remove from wishlist",
       "error": "Failed to update your wishlist"
     }
   },
-
   "datePicker": {
     "calendar": "Calendar",
     "flexible": "Flexible dates",
     "select": "Select",
     "nextMonths": "Next months",
-
     "duration": {
       "title": "How long would you like to stay?",
       "weekend": "Weekend",
       "week": "Week",
       "month": "Month"
     },
-
     "months": {
       "title": "When are you planning to travel?",
       "description": "Select up to 3 months"
     }
   },
-
-
-
   "home": {
     "hero": {
       "title": "Your journey to the perfect stay!",
       "subtitle": "Find the perfect place among thousands of options"
     },
-
     "search": {
       "where": "Where?",
       "when": "When?",
@@ -270,7 +226,6 @@
       "checkInPlaceholder": "Check-in",
       "checkOutPlaceholder": "Check-out"
     },
-
     "categories": {
       "all": "All options",
       "apartments": "Apartments",
@@ -279,7 +234,6 @@
       "studios": "Studios",
       "rooms": "Rooms"
     },
-
     "housing": {
       "inCity": "Stays in {{city}}",
       "allAvailable": "All available options",
@@ -287,26 +241,43 @@
       "loadError": "Failed to load accommodation.",
       "empty": "No results found for your search"
     },
-
     "pagination": {
       "shown": "Showing {{from}}–{{to}} of {{total}}"
+    },
+    "hotDeals": {
+      "title": "Hot deals up to 40% off",
+      "subtitle": "Hurry before it's too late"
+    },
+    "promo": {
+      "title": "Best deals of the high season",
+      "subtitle": "Tap the button and pick the vacation of your dreams!",
+      "button": "Book now"
+    },
+    "popularDestinations": {
+      "title": "Popular destinations",
+      "subtitle": "Where travelers from Ukraine go most often"
+    },
+    "travelCategories": {
+      "title": "Trips of any kind",
+      "subtitle": "Average prices based on the current calendar month",
+      "empty": "No listings in this category yet."
+    },
+    "seasonBest": {
+      "title": "Best hotels of the season",
+      "subtitle": "For those who want a 100% relaxing getaway"
     }
   },
-
   "createHousing": {
     "title": "Set up your WayGo listing",
     "subtitle": "Creating a great listing is easy — let's start with your address.",
     "imageAlt": "WayGo property registration",
-
     "address": {
       "detectingLocation": "Detecting your location...",
       "enterAddress": "Enter your address",
       "useCurrentLocation": "Use current location",
-
       "confirmTitle": "Confirm your address",
       "searchAddress": "Start typing an address",
       "countryNotFound": "Country not found",
-
       "country": "Country",
       "region": "Region/state",
       "city": "City/district",
@@ -314,7 +285,6 @@
       "street": "Street and house number",
       "apartment": "Apartment",
       "apartmentShort": "apt.",
-
       "locationErrors": {
         "notSupported": "Your browser does not support geolocation.",
         "addressNotFound": "Unable to determine the address.",
@@ -325,18 +295,15 @@
         "unknown": "An error occurred while determining your location."
       }
     },
-
     "map": {
       "title": "Refine the location on the map",
       "description": "Your address will only be shared with guests after they make a booking."
     }
   },
-
   "destinationDropdown": {
     "recent": "You recently searched:",
     "popular": "Popular destinations:"
   },
-
   "destinations": {
     "countries": {
       "ukraine": "Ukraine",
@@ -344,7 +311,6 @@
       "france": "France",
       "united kingdom": "United Kingdom"
     },
-
     "cities": {
       "stockholm": "Stockholm",
       "gothenburg": "Gothenburg",
@@ -353,7 +319,6 @@
       "linkoping": "Linköping",
       "norrkoping": "Norrköping",
       "valdemarsvik": "Valdemarsvik",
-
       "kyiv": "Kyiv",
       "lviv": "Lviv",
       "odesa": "Odesa",
@@ -363,7 +328,6 @@
       "ivano-frankivsk": "Ivano-Frankivsk",
       "vinnytsia": "Vinnytsia"
     },
-
     "descriptions": {
       "kyiv": "The capital of Ukraine with historic landmarks, vibrant culture and modern city life.",
       "lviv": "A historic city famous for its architecture, coffee culture and charming old town.",
@@ -373,7 +337,6 @@
       "rivne": "A welcoming western Ukrainian city with green parks, cultural attractions and a relaxed atmosphere.",
       "ivano-frankivsk": "A cozy western Ukrainian city and a popular gateway to the Carpathian Mountains.",
       "vinnytsia": "A comfortable central Ukrainian city known for its parks, riverfront and historic architecture.",
-
       "stockholm": "The capital of Sweden, spread across islands and known for its historic old town and waterfront.",
       "gothenburg": "A lively west coast city known for its canals, seafood, culture and nearby archipelago.",
       "malmo": "A modern southern Swedish city known for its parks, architecture and proximity to Copenhagen.",
@@ -384,7 +347,6 @@
       "valdemarsvik": "A charming coastal town in southeastern Sweden known for its archipelago, peaceful nature and scenic waterfront."
     }
   },
-  
   "guestsDropdown": {
     "adults": {
       "title": "Adults",
@@ -408,8 +370,6 @@
     "increase": "Increase number",
     "decrease": "Decrease number"
   },
-
-
   "footer": {
     "general": {
       "title": "General information",
@@ -421,7 +381,6 @@
       "corporateContacts": "Corporate contact",
       "contentFeedback": "Content guidelines and complaints"
     },
-
     "policies": {
       "title": "Policies and settings",
       "privacy": "Privacy statement",
@@ -431,7 +390,6 @@
       "modernSlavery": "Modern slavery statement",
       "humanRights": "Human rights statement"
     },
-
     "other": {
       "title": "Other",
       "carRental": "Car rental",
@@ -439,46 +397,37 @@
       "hotels": "Hotels",
       "seasonalOffers": "Seasonal holiday offers"
     },
-
     "support": {
       "title": "Support",
       "manageTrips": "Manage your trips",
       "contact": "Contact Customer Support",
       "safety": "Safety resource centre"
     },
-
     "bottom": {
       "copyright": "All material herein © 2005–2026 WayGo Company Pte. Ltd. All rights reserved.",
       "company": "WayGo is part of Booking Holdings Inc., a global leader in online travel and related services."
     }
   },
-
-  
   "profile": {
     "title": "My account",
     "user": "User",
     "logout": "Sign out",
-
     "menu": {
       "personalSecurity": "Personal details and security",
       "personal": "Personal details",
       "security": "Security settings",
       "travelers": "Other travelers",
-
       "paymentInfo": "Payment information",
       "bookings": "My bookings",
       "transactions": "Transaction history",
-
       "notificationsGroup": "Notification settings",
       "notifications": "Communication and notifications",
       "privacy": "Profile privacy",
-
       "help": "Help and support",
       "support": "24/7 Support Center",
       "complaint": "Submit a request / complaint",
       "requests": "My requests and complaints"
     },
-
     "fields": {
       "fullName": "Full name",
       "email": "Email",
@@ -487,7 +436,6 @@
       "citizenship": "Citizenship",
       "address": "Home address"
     },
-
     "personal": {
       "title": "Personal details",
       "description": "Manage your personal information, contact details and profile verification status.",
@@ -496,7 +444,6 @@
       "notVerified": "Not verified",
       "start": "Start"
     },
-
     "security": {
       "title": "Security settings",
       "description": "Change your password or sign-in settings",
@@ -505,22 +452,18 @@
       "newPassword": "New password",
       "confirmPassword": "Confirm password"
     },
-
     "transactions": {
       "title": "Transaction history",
       "description": "All your payments and refunds",
       "empty": "No transactions yet"
     },
-
     "bookings": {
       "title": "My bookings",
       "description": "All your active and previous bookings",
       "empty": "No bookings yet",
-
       "guests_one": "{{count}} guest",
       "guests_other": "{{count}} guests"
     },
-
     "paymentStatus": {
       "pending": "Pending",
       "processing": "Processing",
@@ -528,14 +471,12 @@
       "failed": "Declined",
       "refunded": "Refunded"
     },
-
     "bookingStatus": {
       "pending": "Pending",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled",
       "completed": "Completed"
     },
-
     "toast": {
       "saved": "Saved",
       "saveError": "Failed to save",
@@ -544,12 +485,9 @@
       "passwordsDoNotMatch": "Passwords do not match",
       "fieldNotSupported": "This field is not supported by the API yet"
     },
-
     "comingSoon": {
       "title": "Coming soon",
       "description": "This feature will be available soon"
     }
   }
-
-
 }

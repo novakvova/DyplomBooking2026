@@ -274,6 +274,9 @@ namespace DyplomBooking2026.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
+                    b.Property<int>("HotDealDiscountPercent")
+                        .HasColumnType("integer");
+
                     b.Property<string>("HourlyEndTime")
                         .IsRequired()
                         .HasColumnType("text");
@@ -283,6 +286,12 @@ namespace DyplomBooking2026.Migrations
                         .HasColumnType("text");
 
                     b.Property<bool>("IsAvailable")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsHotDeal")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsSeasonBest")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("LivesWithFamily")
@@ -389,6 +398,10 @@ namespace DyplomBooking2026.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TravelCategory")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -646,7 +659,8 @@ namespace DyplomBooking2026.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
