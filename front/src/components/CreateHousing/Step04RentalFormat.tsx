@@ -48,7 +48,8 @@ const Step04RentalFormat = () => {
 
   return (
     <HousingRegistrationLayout
-      progress={16}
+      step={1}
+      progress={45}
       onBack={handleBack}
       onNext={handleNext}
       nextDisabled={!data.rentalFormat}

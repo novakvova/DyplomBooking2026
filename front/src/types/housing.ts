@@ -12,4 +12,7 @@ export interface Housing {
   isAvailable: boolean;
   ownerName: string;
   createdAt: string;
+  // Рейтинг та відгуки.
+  averageRating: number;
+  reviewCount: number;
 }

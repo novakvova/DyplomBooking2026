@@ -10,7 +10,7 @@ namespace DyplomBooking2026.Controllers.Admin;
 
 [ApiController]
 [Route("api/admin/users")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Manager")]
 public class AdminUsersController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -269,8 +269,10 @@ public class AdminUsersController : ControllerBase
         if (string.IsNullOrWhiteSpace(role))
             return BadRequest("Роль не вказана.");
 
-        // Поки дозволяємо тільки ці ролі.
-        var allowedRoles = new[] { "Client", "Admin" };
+        // Дозволені ролі. Manager додано, бо ця роль
+        // видається в DbSeeder і має доступ до адмінки
+        // нарівні з Admin (див. [Authorize] на Admin-контролерах).
+        var allowedRoles = new[] { "Client", "Admin", "Manager" };
 
         var newRole = allowedRoles.FirstOrDefault(x =>
             x.Equals(role, StringComparison.OrdinalIgnoreCase)

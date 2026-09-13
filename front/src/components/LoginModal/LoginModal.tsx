@@ -1,3 +1,11 @@
+// ПРИМІТКА: цей компонент наразі ніде не імпортується. Реальна форма
+// входу для звичайних користувачів — components/AuthModal/AuthModal.tsx
+// (підключена в components/Header/Header.tsx), яка вже має повноцінні
+// поля email+пароль і виклик authApi.login. LoginModal лишає лише
+// поле email і кнопку "Продовжити" (onContinue) — це, судячи з форми,
+// перший крок якогось окремого багатоетапного флоу, який ще не
+// доробили. Залишено в кодовій базі на випадок, якщо цей флоу
+// плановий; якщо ні — компонент можна безпечно видалити.
 import { useEffect, useId, useRef, type FormEvent } from 'react'
 import styles from './LoginModal.module.scss'
 

@@ -1,5 +1,4 @@
-import { Building, Building2, Hotel, TentTree } from "lucide-react";
-
+import { Building2, House, Hotel, TentTree } from "lucide-react";
 import HousingRegistrationLayout from "./HousingRegistrationLayout";
 import {
   type HousingCategory,
@@ -20,7 +19,7 @@ const categories = [
     title: "Будинки та вілли",
     description:
       "Окремі будинки, котеджі, таунхауси, таун-вілли чи заміські маєтки.",
-    icon: Building,
+    icon: House,
   },
   {
     id: "hotel" as const,
@@ -60,7 +59,8 @@ const Step02Category = () => {
 
   return (
     <HousingRegistrationLayout
-      progress={8}
+      step={1}
+      progress={15}
       onBack={handleBack}
       onNext={handleNext}
       nextDisabled={!data.category}

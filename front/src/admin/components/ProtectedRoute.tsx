@@ -7,8 +7,19 @@ interface Props {
 }
 
 const ProtectedRoute = ({ children, requireAdmin = false }: Props) => {
-  const { isAuthenticated, isAdmin } = useAuthStore();
+  const { isAuthenticated, isAdmin, _hasHydrated } = useAuthStore();
   const location = useLocation();
+
+  // zustand-persist читає localStorage асинхронно. Без цієї перевірки
+  // перший рендер завжди бачив isAuthenticated=false (стан ще не
+  // підвантажено з localStorage) і миттєво редіректив на /login —
+  // навіть якщо валідний токен уже лежав у сховищі. Далі стан
+  // гідратувався, ProtectedRoute пропускав користувача на /admin,
+  // але при наступному оновленні сторінки все повторювалось знову,
+  // створюючи враження "постійно просить логін".
+  if (!_hasHydrated) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     // Зберігаємо звідки прийшли щоб повернутись після логіну
@@ -16,7 +27,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }: Props) => {
   }
 
   if (requireAdmin && !isAdmin) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

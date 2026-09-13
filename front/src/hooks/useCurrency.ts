@@ -3,39 +3,55 @@ import { currencyApi } from "../api/currencyApi";
 import { useCurrencyStore } from "../store/currencyStore";
 
 export const useCurrency = () => {
-    const currency = useCurrencyStore(state => state.currency);
+  const currency = useCurrencyStore((state) => state.currency);
 
-    const { data } = useQuery({
+  const { data } = useQuery({
+    queryKey: ["currency-rates", "uah"],
+    queryFn: () => currencyApi.getRates("uah"),
+    staleTime: 1000 * 60 * 60 * 12,
+  });
 
-        queryKey: [
-            "currency",
-            currency
-        ],
+  const rate =
+    currency === "uah"
+      ? 1
+      : data?.uah?.[currency] ?? 1;
 
-        queryFn: () => currencyApi.getRates("uah"),
+  // UAH -> вибрана валюта
+  const convert = (price: number) => {
+    if (currency === "uah") return price;
 
-        staleTime: 1000 * 60 * 60 * 12 // оновлення курсу валют кожні 12 годин
+    return Math.round(price * rate);
+  };
 
-    });
+  // Вибрана валюта -> UAH
+  const toBaseCurrency = (price: number) => {
+    if (currency === "uah") return price;
 
+    return Math.round(price / rate);
+  };
 
-    const convert = (price: number) => {
-        if (currency === "uah")
-            return price;
+  const getCurrencySymbol = () => {
+    try {
+      const parts = new Intl.NumberFormat("uk-UA", {
+        style: "currency",
+        currency: currency.toUpperCase(),
+        currencyDisplay: "narrowSymbol",
+      }).formatToParts(0);
 
-        const rate = data?.uah?.[currency];
+      return (
+        parts.find((part) => part.type === "currency")?.value ??
+        currency.toUpperCase()
+      );
+    } catch {
+      return currency.toUpperCase();
+    }
+  };
 
-        if (!rate)
-            return price;
-
-        return Math.round(
-            price * rate
-        );
-    };
-
-    return {
-        currency,
-        convert
-    };
-
+  return {
+    currency,
+    currencyCode: currency.toUpperCase(),
+    currencySymbol: getCurrencySymbol(),
+    convert,
+    toBaseCurrency,
+  };
 };

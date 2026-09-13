@@ -24,31 +24,29 @@ const Counter = ({ label, value, onChange }: CounterProps) => {
 
   return (
     <div className="flex min-h-[72px] items-center justify-between border-b border-[#D9DDE0]">
-      <span className="text-[20px] font-medium text-black">
-        {label}
-      </span>
+      <span className="text-[20px] font-medium text-black">{label}</span>
 
       <div className="flex h-[48px] w-[188px] items-center rounded-xl border border-[#7D8790] bg-white">
         <button
-            type="button"
-            onClick={decrease}
-            className="flex h-full w-[70px] items-center justify-center rounded-l-xl text-[#616D75] transition hover:bg-[#F3F6F8] active:bg-[#E8EEF2]"
-            aria-label="Зменшити"
+          type="button"
+          onClick={decrease}
+          className="flex h-full w-[70px] items-center justify-center rounded-l-xl text-[#616D75] transition hover:bg-[#F3F6F8] active:bg-[#E8EEF2]"
+          aria-label="Зменшити"
         >
-            <Minus size={20} strokeWidth={2} />
+          <Minus size={20} strokeWidth={2} />
         </button>
 
         <div className="flex flex-1 items-center justify-center text-[18px] font-medium text-[#1F2933]">
-            {value}
+          {value}
         </div>
 
         <button
-            type="button"
-            onClick={increase}
-            className="flex h-full w-[70px] items-center justify-center rounded-r-xl text-[#355872] transition hover:bg-[#EAF2F7] active:bg-[#DCEAF3]"
-            aria-label="Збільшити"
+          type="button"
+          onClick={increase}
+          className="flex h-full w-[70px] items-center justify-center rounded-r-xl text-[#355872] transition hover:bg-[#EAF2F7] active:bg-[#DCEAF3]"
+          aria-label="Збільшити"
         >
-            <Plus size={20} strokeWidth={2.2} />
+          <Plus size={20} strokeWidth={2.2} />
         </button>
       </div>
     </div>
@@ -66,6 +64,25 @@ const Step06BasicInfo = () => {
     updateData({ bedroomLock });
   };
 
+  const handleBathroomsChange = (bathrooms: number) => {
+    const totalBathroomTypes =
+      data.privateBathroomInside +
+      data.privateBathroomOutside +
+      data.sharedBathroom;
+
+    if (totalBathroomTypes > bathrooms) {
+      updateData({
+        bathrooms,
+        privateBathroomInside: bathrooms,
+        privateBathroomOutside: 0,
+        sharedBathroom: 0,
+      });
+      return;
+    }
+
+    updateData({ bathrooms });
+  };
+
   const handleBack = () => {
     navigate("/housing/register/accommodation-type");
   };
@@ -73,12 +90,13 @@ const Step06BasicInfo = () => {
   const handleNext = () => {
     if (isPrivateRoom && !data.bedroomLock) return;
 
-    // Step07 додамо наступним.
+    navigate("/housing/register/bathroom");
   };
 
   return (
     <HousingRegistrationLayout
-      progress={27}
+      step={1}
+      progress={75}
       onBack={handleBack}
       onNext={handleNext}
       nextDisabled={isPrivateRoom && !data.bedroomLock}
@@ -118,7 +136,7 @@ const Step06BasicInfo = () => {
             <Counter
               label="Ванні кімнати"
               value={data.bathrooms}
-              onChange={(bathrooms) => updateData({ bathrooms })}
+              onChange={handleBathroomsChange}
             />
           )}
         </div>

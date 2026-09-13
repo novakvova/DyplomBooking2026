@@ -1,28 +1,41 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { authApi } from '../api/auth';
 import { useAuthStore } from '../store/authStore';
+import { API_ORIGIN } from '../../api/client';
 
 interface LoginForm {
   email: string;
   password: string;
 }
 
+// Має відповідати ADMIN_ROLES у store/authStore.ts та
+// [Authorize(Roles = "...")] на Admin-контролерах бекенду.
+const ADMIN_ROLES = ['Admin', 'Manager'];
+
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setAuth } = useAuthStore();
   const [loading, setLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
+
+  // Куди повернутись після успішного логіну: ProtectedRoute кладе
+  // сюди сторінку, з якої користувача редіректнуло (location.state.from).
+  // Раніше цей стан ігнорувався і після будь-якого логіну користувач
+  // завжди летів на "/", навіть якщо заходив напряму на
+  // /admin/bookings/42.
+  const from = (location.state as { from?: Location })?.from?.pathname ?? '/admin';
 
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
     try {
       const response = await authApi.login(data);
 
-      const isAdmin = response.roles.includes('Admin') || response.roles.includes('Manager');
+      const isAdmin = response.roles.some((role) => ADMIN_ROLES.includes(role));
       if (!isAdmin) {
         toast.error('Доступ лише для Admin та Manager');
         return;
@@ -35,7 +48,7 @@ const LoginPage = () => {
       });
 
       toast.success(`Ласкаво просимо, ${response.fullName ?? response.email}!`);
-      navigate('/');
+      navigate(from, { replace: true });
     } catch (error: any) {
       toast.error(error.response?.data || 'Невірний email або пароль');
     } finally {
@@ -105,7 +118,7 @@ const LoginPage = () => {
 
           {/* Google Login */}
           <a
-            href="http://localhost:5080/api/auth/google/login"
+            href={`${API_ORIGIN}/api/auth/google/login`}
             className="flex w-full items-center justify-center gap-3 rounded-lg border border-stroke py-3 font-medium text-black transition hover:border-primary dark:border-strokedark dark:text-white"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">

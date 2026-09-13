@@ -20,17 +20,24 @@ namespace DyplomBooking2026.Data
         public DbSet<UserDestinationView> UserDestinationViews { get; set; } = null!;
         public DbSet<AppSetting> AppSettings { get; set; } = null!;
         public DbSet<Payment> Payments { get; set; } = null!;
+        public DbSet<WishlistFolder> WishlistFolders { get; set; }
         public DbSet<WishlistItem> WishlistItems { get; set; }
         public DbSet<Review> Reviews { get; set; } = null!;
+        
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // Один користувач може додати конкретне житло
-            // до списку бажань лише один раз.
+            // Одне житло може бути в декількох папках,
+            // але в одній папці тільки один раз.
             builder.Entity<WishlistItem>()
-                .HasIndex(x => new { x.UserId, x.HousingId })
+                .HasIndex(x => new
+                {
+                    x.UserId,
+                    x.HousingId,
+                    x.FolderId
+                })
                 .IsUnique();
 
             // Room → Booking
@@ -161,6 +168,20 @@ namespace DyplomBooking2026.Data
             builder.Entity<AppSetting>()
                 .HasIndex(x => x.Key)
                 .IsUnique();
+
+            // WishlistFolder → User
+            builder.Entity<WishlistFolder>()
+                .HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // WishlistItem → WishlistFolder
+            builder.Entity<WishlistItem>()
+                .HasOne(x => x.Folder)
+                .WithMany(x => x.Items)
+                .HasForeignKey(x => x.FolderId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

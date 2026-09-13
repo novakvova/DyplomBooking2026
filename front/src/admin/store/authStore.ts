@@ -1,47 +1,16 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+// ─────────────────────────────────────────────────────────────
+// Цей файл раніше містив ОКРЕМИЙ zustand-стор для адмінки, зі своїм
+// ключем localStorage ('token' / 'auth-storage'), не пов'язаним зі
+// стором публічної частини сайту ('waygo_token' / 'waygo-auth').
+//
+// Наслідок: логін в адмінці (або логін через Google, який завжди
+// писав у публічний стор — див. pages/GoogleCallbackPage.tsx) не
+// потрапляв у той стор, який перевіряє ProtectedRoute тут, в
+// admin/. Результат — нескінченний редірект назад на форму логіну,
+// навіть після успішної автентифікації на бекенді.
+//
+// Рішення: єдиний стор в ../../store/authStore.ts. Цей файл лишено
+// як реекспорт, щоб не переписувати імпорти по всьому admin/-коду.
+// ─────────────────────────────────────────────────────────────
 
-interface User {
-  email: string;
-  fullName: string | null;
-  roles: string[];
-}
-
-interface AuthStore {
-  token: string | null;
-  user: User | null;
-  isAuthenticated: boolean;
-  isAdmin: boolean;
-
-  setAuth: (token: string, user: User) => void;
-  logout: () => void;
-}
-
-export const useAuthStore = create<AuthStore>()(
-  persist(
-    (set) => ({
-      token: null,
-      user: null,
-      isAuthenticated: false,
-      isAdmin: false,
-
-      setAuth: (token, user) => {
-        localStorage.setItem('token', token);
-        set({
-          token,
-          user,
-          isAuthenticated: true,
-          isAdmin: user.roles.includes('Admin') || user.roles.includes('Manager'),
-        });
-      },
-
-      logout: () => {
-        localStorage.removeItem('token');
-        set({ token: null, user: null, isAuthenticated: false, isAdmin: false });
-      },
-    }),
-    {
-      name: 'auth-storage',
-    }
-  )
-);
+export { useAuthStore } from '../../store/authStore';

@@ -8,7 +8,7 @@ namespace DyplomBooking2026.Controllers.Admin;
 
 [ApiController]
 [Route("api/admin/reviews")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Manager")]
 public class AdminReviewsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;

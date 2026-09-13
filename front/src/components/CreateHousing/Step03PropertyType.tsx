@@ -53,7 +53,8 @@ const Step03PropertyType = () => {
 
   return (
     <HousingRegistrationLayout
-      progress={12}
+      step={1}
+      progress={30}
       onBack={handleBack}
       onNext={handleNext}
       nextDisabled={!data.propertyType}

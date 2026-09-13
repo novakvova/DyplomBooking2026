@@ -20,6 +20,8 @@ import ProfilePage from "./pages/ProfilePage";
 import BookingPage from "./pages/BookingPage";
 import GoogleCallbackPage from "./pages/GoogleCallbackPage";
 import WishlistPage from "./pages/WishlistPage";
+import HousingListPage from "./pages/HousingListPage";
+import WishlistFolderPage from "./pages/WishlistFolderPage";
 
 // Housing registration
 import HousingRegistrationProviderLayout from "./components/CreateHousing/HousingRegistrationProviderLayout";
@@ -29,6 +31,22 @@ import Step03PropertyType from "./components/CreateHousing/Step03PropertyType";
 import Step04RentalFormat from "./components/CreateHousing/Step04RentalFormat";
 import Step05AccommodationType from "./components/CreateHousing/Step05AccommodationType";
 import Step06BasicInfo from "./components/CreateHousing/Step06BasicInfo";
+import Step07Bathroom from "./components/CreateHousing/Step07Bathroom";
+import Step08Household from "./components/CreateHousing/Step08Household";
+import Step09ListingIntro from "./components/CreateHousing/Step09ListingIntro";
+import Step10Amenities from "./components/CreateHousing/Step10Amenities";
+import Step11Photos from "./components/CreateHousing/Step11Photos";
+import Step12Title from "./components/CreateHousing/Step12Title";
+import Step13Highlights from "./components/CreateHousing/Step13Highlights";
+import Step14Description from "./components/CreateHousing/Step14Description";
+import Step15PublishIntro from "./components/CreateHousing/Step15PublishIntro";
+import Step16BookingMode from "./components/CreateHousing/Step16BookingMode";
+import Step17Price from "./components/CreateHousing/Step17Price";
+import Step18Discounts from "./components/CreateHousing/Step18Discounts";
+import Step19Safety from "./components/CreateHousing/Step19Safety";
+import Step20Rules from "./components/CreateHousing/Step20Rules";
+import Step21Calendar from "./components/CreateHousing/Step21Calendar";
+import Step22Review from "./components/CreateHousing/Step22Review";
 
 // Admin
 import LoginPage from "./admin/pages/Login";
@@ -112,15 +130,23 @@ function App() {
         <Toaster position="top-right" />
 
         <Routes>
-          {/* Root */}
-          <Route path="/" element={<Navigate to="/uk" replace />} />
+            {/* Root */}
+            <Route path="/" element={<Navigate to="/uk" replace />} />
 
-          {/* Localized public pages */}
-          <Route path="/:lang" element={<LanguageLayout />}>
-            <Route index element={<HomePage />} />
+            {/* Localized public pages */}
+            <Route path="/:lang" element={<LanguageLayout />}>
+              {/* Home */}
+              <Route index element={<HomePage />} />
 
-            <Route path="housing" element={<HomePage />} />
-            <Route path="housing/:id" element={<HousingDetailPage />} />
+              {/* Housing */}
+              <Route path="housing" element={<HousingListPage />} />
+              <Route path="housing/:id" element={<HousingDetailPage />} />
+
+              {/* User */}
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="booking" element={<BookingPage />} />
+              <Route path="wishlist" element={<WishlistPage />} />
+              <Route path="wishlist/:folderId" element={<WishlistFolderPage />} />
 
             {/* Housing registration flow */}
             <Route element={<HousingRegistrationProviderLayout />}>
@@ -131,17 +157,28 @@ function App() {
               <Route path="housing/register/rental-format" element={<Step04RentalFormat />} />
               <Route path="housing/register/accommodation-type" element={<Step05AccommodationType />} />
               <Route path="housing/register/basic-info" element={<Step06BasicInfo />} />
-
-
+              <Route path="housing/register/bathroom" element={<Step07Bathroom />} />
+              <Route path="housing/register/household" element={<Step08Household />} />              
+              <Route path="housing/register/listing-intro" element={<Step09ListingIntro />} />
+              <Route path="housing/register/amenities" element={<Step10Amenities />} />
+              <Route path="housing/register/photos" element={<Step11Photos />} />
+              <Route path="housing/register/title" element={<Step12Title />} />
+              <Route path="housing/register/highlights" element={<Step13Highlights />} />
+              <Route path="housing/register/description" element={<Step14Description />} />
+              <Route path="housing/register/publish-intro" element={<Step15PublishIntro />} />
+              <Route path="housing/register/booking-mode" element={<Step16BookingMode />} />
+              <Route path="housing/register/price" element={<Step17Price />} />
+              <Route path="housing/register/discounts" element={<Step18Discounts />} />
+              <Route path="housing/register/safety" element={<Step19Safety />} />
+              <Route path="housing/register/rules" element={<Step20Rules />} />
+              <Route path="housing/register/calendar" element={<Step21Calendar />} />
+              <Route path="housing/register/review" element={<Step22Review />} />
             </Route>
-
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="booking" element={<BookingPage />} />
-            <Route path="wishlist" element={<WishlistPage />} />
           </Route>
 
           {/* Google OAuth callback */}
           <Route path="/google-callback" element={<GoogleCallbackPage />} />
+          <Route path="/oauth-callback" element={<GoogleCallbackPage />} />
 
           {/* Admin login */}
           <Route path="/login" element={<LoginPage />} />

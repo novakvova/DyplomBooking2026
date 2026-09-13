@@ -807,6 +807,12 @@ namespace DyplomBooking2026.Data
                 await context.SaveChangesAsync();
             }
 
+
+            // ── 6.1. Заповнення додаткових даних Housing ────────────────────────
+            // Заповнюємо нові поля для тестових оголошень, які були створені
+            // старою версією Seeder. Дані користувацьких оголошень не змінюємо.
+            await SeedHousingDetailsAsync(context, admin.Id);
+
             // ── 7. Destinations ───────────────────────────────────────────────
             if (!context.Destinations.Any())
             {
@@ -1395,6 +1401,319 @@ namespace DyplomBooking2026.Data
                 }
             }
         }
+        // ─────────────────────────────────────────────────────────────────────
+        // Заповнення додаткових полів тестового житла
+        // ─────────────────────────────────────────────────────────────────────
+        private static async Task SeedHousingDetailsAsync(
+            ApplicationDbContext context,
+            string adminId)
+        {
+            var housings = await context.Housings
+                .Where(h => h.OwnerId == adminId)
+                .ToListAsync();
+
+            if (housings.Count == 0)
+                return;
+
+            foreach (var housing in housings)
+            {
+                var rooms = Math.Max(1, housing.Rooms);
+                var guests = Math.Max(1, housing.MaxGuests);
+
+                var bedrooms = housing.Type switch
+                {
+                    HousingType.Studio => 1,
+                    HousingType.Room => 1,
+                    _ => Math.Max(1, rooms - (housing.Type == HousingType.Villa ? 1 : 0))
+                };
+
+                var beds = Math.Max(1, (int)Math.Ceiling(guests / 2.0));
+                var bathrooms = housing.Type == HousingType.Room
+                    ? 1
+                    : Math.Max(1, (int)Math.Ceiling(bedrooms / 2.0));
+
+                var accommodationType = housing.Type switch
+                {
+                    HousingType.Apartment => "Apartment",
+                    HousingType.House => "House",
+                    HousingType.Room => "Room",
+                    HousingType.Studio => "Studio",
+                    HousingType.Villa => "Villa",
+                    _ => "Apartment"
+                };
+
+                var propertyType = housing.Type switch
+                {
+                    HousingType.Apartment => "Apartment",
+                    HousingType.House => "House",
+                    HousingType.Room => "Guest house",
+                    HousingType.Studio => "Studio",
+                    HousingType.Villa => "Villa",
+                    _ => "Apartment"
+                };
+
+                var amenities = GetAmenitiesForHousing(housing);
+                var highlights = GetHighlightsForHousing(housing);
+
+                SetIfEmpty(housing, "Category", "Housing");
+                SetIfEmpty(housing, "PropertyType", propertyType);
+                SetIfEmpty(housing, "RentalFormat", "daily");
+                SetIfEmpty(housing, "AccommodationType", accommodationType);
+
+                SetIfDefault(housing, "Bedrooms", bedrooms);
+                SetIfDefault(housing, "Beds", beds);
+                SetIfDefault(housing, "Bathrooms", bathrooms);
+
+                SetIfDefault(housing, "PrivateBathroomInside", true);
+                SetIfDefault(housing, "PrivateBathroomOutside", false);
+                SetIfDefault(housing, "SharedBathroom", housing.Type == HousingType.Room);
+                SetIfDefault(housing, "BedroomLock", true);
+
+                SetIfDefault(housing, "LivesWithHost", false);
+                SetIfDefault(housing, "LivesWithFamily", false);
+                SetIfDefault(housing, "OtherGuestsPresent", false);
+                SetIfDefault(housing, "PetsPresent", false);
+
+                SetCollectionIfEmpty(housing, "Amenities", amenities);
+                SetCollectionIfEmpty(housing, "Highlights", highlights);
+
+                SetIfEmpty(housing, "BookingMode", "manual");
+
+                SetIfDefault(housing, "WeeklyDiscountPercent", 5);
+                SetIfDefault(housing, "MonthlyDiscountPercent", 10);
+                SetIfDefault(housing, "ShortStayDiscountPercent", 0);
+
+                SetIfDefault(housing, "SecurityCameras", false);
+                SetIfDefault(housing, "NoiseMonitor", false);
+                SetIfDefault(housing, "PropertySafetyFeatures", true);
+
+                SetIfEmpty(housing, "SecurityCamerasDescription", "Камери всередині житла відсутні.");
+                SetIfEmpty(housing, "NoiseMonitorDescription", "Пристрій контролю шуму не використовується.");
+                SetIfEmpty(housing, "PropertySafetyFeaturesDescription",
+                    "Димовий датчик, вогнегасник та аптечка.");
+
+                SetIfEmpty(housing, "CheckInTime", "14:00");
+                SetIfEmpty(housing, "CheckOutTime", "11:00");
+                SetIfEmpty(housing, "HourlyStartTime", "09:00");
+                SetIfEmpty(housing, "HourlyEndTime", "21:00");
+
+                SetIfDefault(housing, "EarlyCheckIn", true);
+
+                SetIfEmpty(housing, "SmokingRule", "forbidden");
+                SetIfEmpty(housing, "PetsRule", "allowed");
+                SetIfEmpty(housing, "PartiesRule", "forbidden");
+
+                SetIfEmpty(housing, "QuietHoursMode", "enabled");
+                SetIfEmpty(housing, "QuietHoursFrom", "22:00");
+                SetIfEmpty(housing, "QuietHoursTo", "08:00");
+
+                SetIfEmpty(
+                    housing,
+                    "AdditionalRules",
+                    "Будь ласка, дотримуйтесь правил тиші та поводьтеся дбайливо з майном."
+                );
+
+                SetIfDefault(housing, "MinimumStay", 1);
+                SetIfDefault(housing, "BookingWindowMonths", 6);
+                SetIfEmpty(housing, "PreparationTime", "none");
+            }
+
+            await context.SaveChangesAsync();
+        }
+
+        private static List<string> GetAmenitiesForHousing(Housing housing)
+        {
+            var amenities = new List<string>
+            {
+                "Free Wi-Fi",
+                "Kitchen",
+                "Air conditioning",
+                "Heating",
+                "TV"
+            };
+
+            var title = housing.Title.ToLowerInvariant();
+            var description = housing.Description.ToLowerInvariant();
+
+            if (title.Contains("море") || title.Contains("океан") ||
+                description.Contains("море") || description.Contains("океан"))
+            {
+                amenities.Add("Balcony");
+                amenities.Add("Terrace");
+            }
+
+            if (title.Contains("басейн") || description.Contains("басейн"))
+                amenities.Add("Pool");
+
+            if (title.Contains("саун") || description.Contains("саун"))
+                amenities.Add("Sauna");
+
+            if (title.Contains("озер") || description.Contains("озер"))
+                amenities.Add("Lake view");
+
+            if (title.Contains("гір") || title.Contains("альп") ||
+                description.Contains("гір") || description.Contains("альп"))
+            {
+                amenities.Add("Mountain view");
+                amenities.Add("Parking");
+            }
+
+            if (housing.Type == HousingType.House || housing.Type == HousingType.Villa)
+                amenities.Add("Parking");
+
+            if (housing.Type == HousingType.Room)
+            {
+                amenities.Remove("Kitchen");
+                amenities.Add("Shared kitchen");
+                amenities.Add("Breakfast");
+            }
+
+            return amenities.Distinct().ToList();
+        }
+
+        private static List<string> GetHighlightsForHousing(Housing housing)
+        {
+            var highlights = new List<string>();
+            var title = housing.Title.ToLowerInvariant();
+            var description = housing.Description.ToLowerInvariant();
+
+            if (title.Contains("центр") || description.Contains("центр"))
+                highlights.Add("У центрі міста");
+
+            if (title.Contains("море") || title.Contains("океан") ||
+                description.Contains("море") || description.Contains("океан"))
+            {
+                highlights.Add("Близько до моря");
+                highlights.Add("Вид на воду");
+            }
+
+            if (title.Contains("гір") || title.Contains("альп") ||
+                description.Contains("гір") || description.Contains("альп"))
+                highlights.Add("Вид на гори");
+
+            if (title.Contains("озер") || description.Contains("озер"))
+                highlights.Add("Поруч з озером");
+
+            if (title.Contains("басейн") || description.Contains("басейн"))
+                highlights.Add("Приватний басейн");
+
+            if (title.Contains("пляж") || description.Contains("пляж"))
+                highlights.Add("Поруч із пляжем");
+
+            if (highlights.Count == 0)
+                highlights.Add("Зручне розташування");
+
+            highlights.Add("Самостійне заселення");
+            return highlights.Distinct().ToList();
+        }
+
+        private static void SetIfEmpty(
+            Housing housing,
+            string propertyName,
+            object value)
+        {
+            var property = housing.GetType().GetProperty(propertyName);
+
+            if (property is null || !property.CanWrite)
+                return;
+
+            var current = property.GetValue(housing);
+
+            if (current is string text && !string.IsNullOrWhiteSpace(text))
+                return;
+
+            if (current is not null && property.PropertyType != typeof(string))
+                return;
+
+            SetPropertyValue(property, housing, value);
+        }
+
+        private static void SetIfDefault(
+            Housing housing,
+            string propertyName,
+            object value)
+        {
+            var property = housing.GetType().GetProperty(propertyName);
+
+            if (property is null || !property.CanWrite)
+                return;
+
+            var current = property.GetValue(housing);
+
+            if (current is not null)
+            {
+                var targetType = Nullable.GetUnderlyingType(property.PropertyType)
+                    ?? property.PropertyType;
+
+                if (targetType != typeof(string))
+                {
+                    var defaultValue = targetType.IsValueType
+                        ? Activator.CreateInstance(targetType)
+                        : null;
+
+                    if (!Equals(current, defaultValue))
+                        return;
+                }
+            }
+
+            SetPropertyValue(property, housing, value);
+        }
+
+        private static void SetCollectionIfEmpty(
+            Housing housing,
+            string propertyName,
+            object value)
+        {
+            var property = housing.GetType().GetProperty(propertyName);
+
+            if (property is null || !property.CanWrite)
+                return;
+
+            var current = property.GetValue(housing);
+
+            if (current is System.Collections.IEnumerable enumerable &&
+                current is not string &&
+                enumerable.Cast<object>().Any())
+            {
+                return;
+            }
+
+            SetPropertyValue(property, housing, value);
+        }
+
+        private static void SetPropertyValue(
+            System.Reflection.PropertyInfo property,
+            Housing housing,
+            object value)
+        {
+            try
+            {
+                if (value is null)
+                {
+                    property.SetValue(housing, null);
+                    return;
+                }
+
+                if (property.PropertyType.IsInstanceOfType(value))
+                {
+                    property.SetValue(housing, value);
+                    return;
+                }
+
+                var json = System.Text.Json.JsonSerializer.Serialize(value);
+                var converted = System.Text.Json.JsonSerializer.Deserialize(
+                    json,
+                    property.PropertyType);
+
+                property.SetValue(housing, converted);
+            }
+            catch
+            {
+                // Якщо конкретне поле має інший тип у поточній моделі,
+                // Seeder не повинен падати через це поле.
+            }
+        }
+
         // ─────────────────────────────────────────────────────────────────────
         // Допоміжний метод для створення тестових користувачів
         // ─────────────────────────────────────────────────────────────────────

@@ -15,10 +15,6 @@ import GuestsDropdown from "../components/GuestsDropdown/GuestsDropdown";
 import DateDropdown from "../components/DateSearch/DateDropdown";
 import HousingCard from "../components/HousingCard/HousingCard";
 
-// ─────────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────────
-
 const PAGE_SIZE_OPTIONS = [8, 12, 24, 48];
 
 const CATEGORIES = [
@@ -30,17 +26,16 @@ const CATEGORIES = [
   { key: "Room", labelKey: "home.categories.rooms" },
 ];
 
-// ─────────────────────────────────────────────
-// COMPONENT
-// ─────────────────────────────────────────────
+const HERO_NAV_ITEMS = [
+  { key: "hotels", label: "Готелі" },
+  { key: "housing", label: "Будинки та апартаменти" },
+  { key: "excursions", label: "Екскурсії" },
+  { key: "transport", label: "Транспорт" },
+];
 
 const HomePage = () => {
   const { t } = useTranslation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-
-  // ─────────────────────────────────────────────
-  // SEARCH STATE
-  // ─────────────────────────────────────────────
 
   const [city, setCity] = useState("");
   const [cityInput, setCityInput] = useState("");
@@ -54,6 +49,7 @@ const HomePage = () => {
   const [openGuests, setOpenGuests] = useState(false);
 
   const [category, setCategory] = useState("all");
+  const [heroNav, setHeroNav] = useState("hotels");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
@@ -64,6 +60,18 @@ const HomePage = () => {
     babies: 0,
     pets: 0,
     rooms: 0,
+  });
+
+  const destinationRef = useRef<HTMLDivElement>(null);
+  const datesRef = useRef<HTMLDivElement>(null);
+  const guestsRef = useRef<HTMLDivElement>(null);
+
+  const [recentDestinations, setRecentDestinations] = useState<Destination[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("recentDestinations") || "[]");
+    } catch {
+      return [];
+    }
   });
 
   const handlePopularDestinationOpen = (destination: Destination) => {
@@ -77,30 +85,6 @@ const HomePage = () => {
       console.error("Failed to register destination view:", error);
     }
   };
-
-  // ─────────────────────────────────────────────
-  // REFS
-  // ─────────────────────────────────────────────
-
-  const destinationRef = useRef<HTMLDivElement>(null);
-  const datesRef = useRef<HTMLDivElement>(null);
-  const guestsRef = useRef<HTMLDivElement>(null);
-
-  // ─────────────────────────────────────────────
-  // RECENT DESTINATIONS
-  // ─────────────────────────────────────────────
-
-  const [recentDestinations, setRecentDestinations] = useState<Destination[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem("recentDestinations") || "[]");
-    } catch {
-      return [];
-    }
-  });
-
-  // ─────────────────────────────────────────────
-  // API QUERIES
-  // ─────────────────────────────────────────────
 
   const { data: wishlist = [] } = useQuery<Housing[]>({
     queryKey: ["wishlist"],
@@ -138,18 +122,10 @@ const HomePage = () => {
       }),
   });
 
-  // ─────────────────────────────────────────────
-  // DESTINATION LOCALIZATION
-  // ─────────────────────────────────────────────
-
   const getDestinationCityName = (destination: Destination) =>
     t(`destinations.cities.${destination.slug}`, {
       defaultValue: destination.city,
     });
-
-  // ─────────────────────────────────────────────
-  // DROPDOWN DESTINATIONS
-  // ─────────────────────────────────────────────
 
   const dropdownDestinations = useMemo(() => {
     const query = cityInput.trim().toLocaleLowerCase();
@@ -158,10 +134,7 @@ const HomePage = () => {
 
     const uniqueDestinations = Array.from(
       new Map(
-        [...searchedDestinations, ...popularDestinations].map((item) => [
-          item.id,
-          item,
-        ])
+        [...searchedDestinations, ...popularDestinations].map((item) => [item.id, item])
       ).values()
     );
 
@@ -169,16 +142,9 @@ const HomePage = () => {
       const backendCity = item.city.toLocaleLowerCase();
       const localizedCity = getDestinationCityName(item).toLocaleLowerCase();
 
-      return (
-        backendCity.includes(query) ||
-        localizedCity.includes(query)
-      );
+      return backendCity.includes(query) || localizedCity.includes(query);
     });
   }, [cityInput, searchedDestinations, popularDestinations, t]);
-
-  // ─────────────────────────────────────────────
-  // DESTINATION SELECT
-  // ─────────────────────────────────────────────
 
   const handleDestinationSelect = (destination: Destination) => {
     const localizedCity = getDestinationCityName(destination);
@@ -202,17 +168,11 @@ const HomePage = () => {
   const saveRecentDestination = (cityName: string) => {
     const query = cityName.trim().toLocaleLowerCase();
 
-    const destination = [
-      ...searchedDestinations,
-      ...popularDestinations,
-    ].find((item) => {
+    const destination = [...searchedDestinations, ...popularDestinations].find((item) => {
       const backendCity = item.city.toLocaleLowerCase();
       const localizedCity = getDestinationCityName(item).toLocaleLowerCase();
 
-      return (
-        backendCity === query ||
-        localizedCity === query
-      );
+      return backendCity === query || localizedCity === query;
     });
 
     if (!destination) return;
@@ -222,17 +182,9 @@ const HomePage = () => {
       ...recentDestinations.filter((item) => item.id !== destination.id),
     ].slice(0, 3);
 
-    localStorage.setItem(
-      "recentDestinations",
-      JSON.stringify(updated)
-    );
-
+    localStorage.setItem("recentDestinations", JSON.stringify(updated));
     setRecentDestinations(updated);
   };
-
-  // ─────────────────────────────────────────────
-  // SEARCH / FILTERS
-  // ─────────────────────────────────────────────
 
   const resetPage = () => setPage(1);
 
@@ -277,10 +229,6 @@ const HomePage = () => {
     setPage(1);
   };
 
-  // ─────────────────────────────────────────────
-  // HOUSING FILTER
-  // ─────────────────────────────────────────────
-
   const filteredHousings = useMemo(() => {
     if (!allHousings) return [];
     if (category === "all") return allHousings;
@@ -293,16 +241,8 @@ const HomePage = () => {
 
   const housings = useMemo(() => {
     const start = (page - 1) * pageSize;
-
-    return filteredHousings.slice(
-      start,
-      start + pageSize
-    );
+    return filteredHousings.slice(start, start + pageSize);
   }, [filteredHousings, page, pageSize]);
-
-  // ─────────────────────────────────────────────
-  // PAGINATION
-  // ─────────────────────────────────────────────
 
   const pageNumbers = useMemo(() => {
     const pages: (number | "...")[] = [];
@@ -331,10 +271,6 @@ const HomePage = () => {
     return pages;
   }, [page, totalPages]);
 
-  // ─────────────────────────────────────────────
-  // DESTINATION DEBOUNCE
-  // ─────────────────────────────────────────────
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchQuery(cityInput.trim());
@@ -343,32 +279,19 @@ const HomePage = () => {
     return () => clearTimeout(timer);
   }, [cityInput]);
 
-  // ─────────────────────────────────────────────
-  // CLICK OUTSIDE DROPDOWNS
-  // ─────────────────────────────────────────────
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
 
-      if (
-        destinationRef.current &&
-        !destinationRef.current.contains(target)
-      ) {
+      if (destinationRef.current && !destinationRef.current.contains(target)) {
         setOpenDestination(false);
       }
 
-      if (
-        datesRef.current &&
-        !datesRef.current.contains(target)
-      ) {
+      if (datesRef.current && !datesRef.current.contains(target)) {
         setOpenDates(false);
       }
 
-      if (
-        guestsRef.current &&
-        !guestsRef.current.contains(target)
-      ) {
+      if (guestsRef.current && !guestsRef.current.contains(target)) {
         setOpenGuests(false);
       }
     };
@@ -380,10 +303,6 @@ const HomePage = () => {
     };
   }, []);
 
-  // ─────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────
-
   return (
     <div>
       {/* ───────────────── HERO ───────────────── */}
@@ -394,20 +313,47 @@ const HomePage = () => {
           items-center justify-center overflow-visible
           bg-cover bg-center bg-no-repeat
         "
-        style={{
-          backgroundImage: "url('/images/background.jpg')",
-        }}
+        style={{ backgroundImage: "url('/images/background.jpg')" }}
       >
         <div className="absolute inset-0 z-0 bg-black/30" />
 
         <div
           className="
             relative z-[100] flex w-full max-w-[1320px]
-            flex-col items-center gap-6 px-4
+            flex-col items-center px-4
             min-[1024px]:px-8
           "
         >
-          {/* Hero title */}
+          {/* ───────── HERO TOP NAV ───────── */}
+
+          <div
+            className="
+              mb-[44px] grid h-[58px] w-full max-w-[956px]
+              grid-cols-4 overflow-hidden
+              rounded-[20px] bg-white
+            "
+          >
+            {HERO_NAV_ITEMS.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setHeroNav(item.key)}
+                className="
+                  flex h-[58px] items-center justify-center
+                  whitespace-nowrap bg-white px-2
+                  text-center text-[20px] font-medium
+                  leading-none tracking-normal
+                  text-[#243C4E]
+                  transition hover:bg-[#F5F7F8]
+                "
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ───────── HERO TITLE ───────── */}
+
           <h1
             className="
               text-center text-3xl font-bold text-white
@@ -419,20 +365,11 @@ const HomePage = () => {
             {t("home.hero.title")}
           </h1>
 
-          <p
-            className="
-              text-center text-base text-white/80
-              min-[1024px]:text-lg
-            "
-          >
-            {t("home.hero.subtitle")}
-          </p>
-
           {/* ───────────────── SEARCH ───────────────── */}
 
           <div
             className="
-              relative z-20 mx-auto flex w-full max-w-[1256px]
+              relative z-20 mx-auto mt-7 flex w-full max-w-[1256px]
               flex-col rounded-[20px]
               bg-white/10 p-3
               shadow-[0_8px_24px_rgba(0,0,0,0.12)]
@@ -447,6 +384,7 @@ const HomePage = () => {
             "
           >
             {/* Destination */}
+
             <div
               ref={destinationRef}
               className="
@@ -509,7 +447,6 @@ const HomePage = () => {
               )}
             </div>
 
-            {/* Divider */}
             <div
               className="
                 hidden h-[56px] w-px shrink-0
@@ -520,6 +457,7 @@ const HomePage = () => {
             />
 
             {/* Dates */}
+
             <div
               ref={datesRef}
               className="
@@ -582,7 +520,6 @@ const HomePage = () => {
               )}
             </div>
 
-            {/* Divider */}
             <div
               className="
                 hidden h-[56px] w-px shrink-0
@@ -593,6 +530,7 @@ const HomePage = () => {
             />
 
             {/* Guests */}
+
             <div
               ref={guestsRef}
               className="
@@ -640,24 +578,19 @@ const HomePage = () => {
                   "
                 >
                   {t("home.search.guestsSummary", {
-                    guests:
-                      guests.adults +
-                      guests.children +
-                      guests.babies,
+                    guests: guests.adults + guests.children + guests.babies,
                     rooms: guests.rooms,
                   })}
                 </span>
               </button>
 
               {openGuests && (
-                <GuestsDropdown
-                  guests={guests}
-                  setGuests={setGuests}
-                />
+                <GuestsDropdown guests={guests} setGuests={setGuests} />
               )}
             </div>
 
             {/* Search button */}
+
             <button
               type="button"
               onClick={handleSearch}
@@ -765,7 +698,6 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* Loading */}
         {isLoading && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[...Array(pageSize)].map((_, index) => (
@@ -777,14 +709,12 @@ const HomePage = () => {
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div className="rounded-xl bg-red-50 p-6 text-center text-red-600">
             ⚠️ {t("home.housing.loadError")}
           </div>
         )}
 
-        {/* Empty */}
         {!isLoading && !error && filteredHousings.length === 0 && (
           <div className="rounded-xl bg-slate-50 p-12 text-center text-slate-500">
             <img
@@ -797,22 +727,18 @@ const HomePage = () => {
           </div>
         )}
 
-        {/* Cards */}
         {housings.length > 0 && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {housings.map((housing) => (
               <HousingCard
                 key={housing.id}
                 housing={housing}
-                isFavorite={wishlist.some(
-                  (item) => item.id === housing.id
-                )}
+                isFavorite={wishlist.some((item) => item.id === housing.id)}
               />
             ))}
           </div>
         )}
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="mt-10 flex flex-col items-center gap-3">
             <p className="text-sm text-slate-500">
@@ -826,11 +752,7 @@ const HomePage = () => {
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() =>
-                  setPage((current) =>
-                    Math.max(1, current - 1)
-                  )
-                }
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
                 disabled={page === 1}
                 className="
                   flex h-9 w-9 items-center justify-center
@@ -875,9 +797,7 @@ const HomePage = () => {
               <button
                 type="button"
                 onClick={() =>
-                  setPage((current) =>
-                    Math.min(totalPages, current + 1)
-                  )
+                  setPage((current) => Math.min(totalPages, current + 1))
                 }
                 disabled={page === totalPages}
                 className="

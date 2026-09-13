@@ -1,5 +1,19 @@
 import apiClient from "./client";
 import type { Housing } from "../types/housing";
+import type { Review, CreateReview } from "../types/review";
+
+// Примітка: нижче housingApi/destinationApi раніше ходили через
+// голий fetch(`https://localhost:7080/...`) замість apiClient.
+// Це створювало відразу три проблеми:
+//  1) адреса бекенду була захардкоджена і не залежала від
+//     VITE_API_URL, тобто збірка під інший origin просто ламалась;
+//  2) fetch не отримував Authorization-заголовок з apiClient-
+//     інтерцептора, тому будь-який приватний запит через нього
+//     завжди йшов як анонімний;
+//  3) 401/помилки не проходили через єдиний response-interceptor
+//     (логаут/редірект), тому поведінка при "протухлому" токені
+//     була непередбачуваною.
+// Усі виклики нижче переведено на apiClient.
 
 const getVisitorId = () => {
   let id = localStorage.getItem("waygo_visitor_id");
@@ -90,33 +104,21 @@ export const housingApi = {
   getById: async (
     id: number
   ): Promise<Housing> => {
-    const response = await fetch(
-      `https://localhost:7080/api/Housing/${id}`
+    const { data } = await apiClient.get(
+      `/Housing/${id}`
     );
 
-    if (!response.ok) {
-      throw new Error(
-        "Failed to load housing"
-      );
-    }
-
-    return response.json();
+    return data;
   },
 
   getPhotos: async (
     id: number
   ) => {
-    const response = await fetch(
-      `https://localhost:7080/api/Housing/${id}/photos`
+    const { data } = await apiClient.get(
+      `/Housing/${id}/photos`
     );
 
-    if (!response.ok) {
-      throw new Error(
-        "Failed to load photos"
-      );
-    }
-
-    return response.json();
+    return data;
   },
 
   getAll: async ({
@@ -160,11 +162,11 @@ export const housingApi = {
       );
     }
 
-    const response = await fetch(
-      `https://localhost:7080/api/Housing?${params}`
+    const { data } = await apiClient.get(
+      `/Housing?${params}`
     );
 
-    return response.json();
+    return data;
   },
 
   book: async (
@@ -190,33 +192,22 @@ export const housingApi = {
 
 export const destinationApi = {
   getPopular: async () => {
-    const response = await fetch(
-      "https://localhost:7080/api/Destinations/popular"
+    const { data } = await apiClient.get(
+      "/Destinations/popular"
     );
 
-    if (!response.ok) {
-      throw new Error(
-        "Failed to load destinations"
-      );
-    }
-
-    return response.json();
+    return data;
   },
 
   search: async (
     query: string
   ) => {
-    const response = await fetch(
-      `https://localhost:7080/api/Destinations/search?query=${query}`
+    const { data } = await apiClient.get(
+      "/Destinations/search",
+      { params: { query } }
     );
 
-    if (!response.ok) {
-      throw new Error(
-        "Failed to search destinations"
-      );
-    }
-
-    return response.json();
+    return data;
   },
 
   registerView: async (
@@ -374,38 +365,52 @@ export const profileApi = {
 // ─────────────────────────────────────────────
 
 export const wishlistApi = {
+  // Усі унікальні збережені житла.
   getAll: async (): Promise<Housing[]> => {
+    const { data } = await apiClient.get("/wishlist");
+    return data;
+  },
+
+  // Додати житло в одну або декілька папок.
+  add: async (housingId: number, folderIds: number[]): Promise<void> => {
+    await apiClient.post("/wishlist/add", {
+      housingId,
+      folderIds,
+    });
+  },
+
+  // Повністю прибрати житло з усіх папок.
+  remove: async (housingId: number): Promise<void> => {
+    await apiClient.delete(`/wishlist/${housingId}`);
+  },
+
+  // Перевірити, чи є житло хоча б в одній папці.
+  check: async (housingId: number): Promise<{ isFavorite: boolean }> => {
+    const { data } = await apiClient.get(`/wishlist/${housingId}/check`);
+    return data;
+  },
+
+  // Видалити житло тільки з конкретної папки.
+  removeFromFolder: async (folderId: number, housingId: number): Promise<void> => {
+    await apiClient.delete(`/wishlistfolder/${folderId}/items/${housingId}`);
+  },
+};
+
+// ─────────────────────────────────────────────
+// REVIEW
+// ─────────────────────────────────────────────
+
+export const reviewApi = {
+  getByHousing: async (housingId: number): Promise<Review[]> => {
     const { data } = await apiClient.get(
-      "/wishlist"
+      `/Review/housing/${housingId}`
     );
 
     return data;
   },
 
-  add: async (
-    housingId: number
-  ): Promise<void> => {
-    await apiClient.post(
-      `/wishlist/${housingId}`
-    );
-  },
-
-  remove: async (
-    housingId: number
-  ): Promise<void> => {
-    await apiClient.delete(
-      `/wishlist/${housingId}`
-    );
-  },
-
-  check: async (
-    housingId: number
-  ): Promise<{
-    isFavorite: boolean;
-  }> => {
-    const { data } = await apiClient.get(
-      `/wishlist/${housingId}/check`
-    );
+  create: async (dto: CreateReview): Promise<Review> => {
+    const { data } = await apiClient.post("/Review", dto);
 
     return data;
   },

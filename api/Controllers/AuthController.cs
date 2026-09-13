@@ -3,6 +3,8 @@ using System.Web;
 using DyplomBooking2026.DTOs;
 using DyplomBooking2026.Models;
 using DyplomBooking2026.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,17 +19,41 @@ namespace DyplomBooking2026.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly TokenService _tokenService;
         private readonly EmailService _emailService;
+        private readonly IAuthenticationSchemeProvider _schemeProvider;
+        private readonly string _frontendBaseUrl;
 
         public AuthController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             TokenService tokenService,
-            EmailService emailService)
+            EmailService emailService,
+            IAuthenticationSchemeProvider schemeProvider,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _tokenService = tokenService;
             _emailService = emailService;
+            _schemeProvider = schemeProvider;
+
+            // Раніше цей URL був захардкоджений у двох різних місцях
+            // (тут і в ForgotPassword) як "http://localhost:5173" —
+            // будь-яке розгортання на іншому домені/порту ламало
+            // OAuth-редірект і лист відновлення паролю.
+            _frontendBaseUrl =
+                configuration["Frontend:BaseUrl"]
+                ?? "http://localhost:5173";
+        }
+
+        // Google/Facebook реєструються в Program.cs лише якщо для них
+        // задано реальні ClientId/AppId (див. коментар там). Якщо
+        // секретів немає, схема відсутня в DI, і виклик Challenge()
+        // впаде з InvalidOperationException("No authentication handler
+        // is registered..."). Перевіряємо заздалегідь і повертаємо
+        // зрозумілу відповідь замість 500-ки.
+        private async Task<bool> IsSchemeRegisteredAsync(string schemeName)
+        {
+            return await _schemeProvider.GetSchemeAsync(schemeName) != null;
         }
 
         // ──────────────────────────────────────────
@@ -113,8 +139,15 @@ namespace DyplomBooking2026.Controllers
         // ──────────────────────────────────────────
 
         [HttpGet("google/login")]
-        public IActionResult GoogleLogin([FromQuery] string? returnUrl = null)
+        public async Task<IActionResult> GoogleLogin([FromQuery] string? returnUrl = null)
         {
+            if (!await IsSchemeRegisteredAsync(GoogleDefaults.AuthenticationScheme))
+            {
+                return StatusCode(503,
+                    "Вхід через Google тимчасово недоступний: " +
+                    "не налаштовано Authentication:Google:ClientId/ClientSecret на сервері.");
+            }
+
             var redirectUrl = Url.Action(nameof(GoogleCallback), "Auth",
                 new { returnUrl }, Request.Scheme);
 
@@ -127,15 +160,38 @@ namespace DyplomBooking2026.Controllers
         [HttpGet("google/callback")]
         public async Task<ActionResult<AuthResponseDto>> GoogleCallback()
         {
+            return await CompleteExternalLogin("Google");
+        }
+
+        [HttpGet("facebook/login")]
+        public async Task<IActionResult> FacebookLogin([FromQuery] string? returnUrl = null)
+        {
+            if (!await IsSchemeRegisteredAsync(FacebookDefaults.AuthenticationScheme))
+            {
+                return StatusCode(503,
+                    "Вхід через Facebook тимчасово недоступний: " +
+                    "не налаштовано Authentication:Facebook:AppId/AppSecret на сервері.");
+            }
+
+            var redirectUrl = Url.Action(nameof(FacebookCallback), "Auth", new { returnUrl }, Request.Scheme);
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(FacebookDefaults.AuthenticationScheme, redirectUrl);
+            return Challenge(properties, FacebookDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("facebook/callback")]
+        public async Task<ActionResult<AuthResponseDto>> FacebookCallback() => await CompleteExternalLogin("Facebook");
+
+        private async Task<ActionResult<AuthResponseDto>> CompleteExternalLogin(string providerName)
+        {
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
-                return BadRequest("Не вдалося отримати дані від Google.");
+                return BadRequest($"Не вдалося отримати дані від {providerName}.");
 
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
             var name = info.Principal.FindFirstValue(ClaimTypes.Name);
 
             if (string.IsNullOrEmpty(email))
-                return BadRequest("Google не надав email.");
+                return BadRequest($"{providerName} не надав email.");
 
             var user = await _userManager.FindByEmailAsync(email);
 
@@ -145,7 +201,7 @@ namespace DyplomBooking2026.Controllers
                 {
                     UserName = email,
                     Email = email,
-                    FullName = name,
+                FullName = name ?? email,
                     EmailConfirmed = true
                 };
 
@@ -165,8 +221,9 @@ namespace DyplomBooking2026.Controllers
                 await _userManager.AddLoginAsync(user, info);
 
             var response = await BuildAuthResponse(user);
-            var frontendUrl = $"http://localhost:5173/google-callback" +
-                $"?token={Uri.EscapeDataString(response.Token)}" +
+            var frontendUrl = $"{_frontendBaseUrl}/oauth-callback" +
+                $"?provider={Uri.EscapeDataString(providerName)}" +
+                $"&token={Uri.EscapeDataString(response.Token)}" +
                 $"&email={Uri.EscapeDataString(response.Email)}" +
                 $"&fullName={Uri.EscapeDataString(response.FullName ?? "")}" +
                 $"&roles={string.Join(",", response.Roles)}";
@@ -197,11 +254,10 @@ namespace DyplomBooking2026.Controllers
             var encodedToken = HttpUtility.UrlEncode(token);
             var encodedEmail = HttpUtility.UrlEncode(dto.Email);
 
-            // Посилання для фронтенду (зміни BaseUrl під свій фронтенд або поки що Swagger)
-            // Приклад для React-фронту: http://localhost:5173/reset-password?email=...&token=...
-            // Для тестування в Swagger — використовуй /api/auth/reset-password напряму
-            var baseUrl = "http://localhost:5173";
-            var resetLink = $"{baseUrl}/reset-password?email={encodedEmail}&token={encodedToken}";
+            // Посилання для фронтенду. BaseUrl береться з
+            // appsettings (Frontend:BaseUrl), щоб не хардкодити
+            // localhost і не розходитись з OAuth-редіректом вище.
+            var resetLink = $"{_frontendBaseUrl}/reset-password?email={encodedEmail}&token={encodedToken}";
 
             try
             {

@@ -187,7 +187,8 @@ const Step05AccommodationType = () => {
 
   return (
     <HousingRegistrationLayout
-      progress={22}
+      step={1}
+      progress={60}
       onBack={handleBack}
       onNext={handleNext}
       nextDisabled={!data.accommodationType}
@@ -214,7 +215,7 @@ const Step05AccommodationType = () => {
                     : "border-[#616D75] bg-white hover:border-[#243C4E]"
                 }`}
               >
-                <h2 className="text-[20px] font-medium leading-none text-black">
+                <h2 className="text-[20px] !font-normal leading-none text-black">
                   {item.title}
                 </h2>
 

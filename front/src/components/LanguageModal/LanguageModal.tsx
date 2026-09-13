@@ -17,6 +17,7 @@ interface Language {
 const languages: Language[] = [
   { flag: "UA", code: "uk", name: "Українська" },
   { flag: "GB", code: "en", name: "English" },
+  { flag: "SE", code: "sv", name: "Svenska" },
   { flag: "CN", code: "zh", name: "汉语" },
   { flag: "IN", code: "hi", name: "हिन्दी" },
   { flag: "DE", code: "de", name: "Deutsch" },
@@ -28,7 +29,6 @@ const languages: Language[] = [
   { flag: "NL", code: "nl", name: "Nederlands" },
   { flag: "KR", code: "ko", name: "한국어" },
   { flag: "FR", code: "fr", name: "Français" },
-  { flag: "SE", code: "sv", name: "Svenska" },
   { flag: "KZ", code: "kk", name: "Қазақ тілі" },
   { flag: "BD", code: "bn", name: "বাংলা" },
   { flag: "PL", code: "pl", name: "Polski" },
