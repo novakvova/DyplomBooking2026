@@ -84,7 +84,7 @@ const TravelCategoriesSection = ({ wishlist }: Props) => {
           {t("home.travelCategories.empty", "Поки що немає житла в цій категорії.")}
         </p>
       ) : (
-        <div className="flex flex-wrap gap-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {housings.map((housing) => (
             <HomeSectionCard
               key={housing.id}

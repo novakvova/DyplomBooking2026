@@ -23,7 +23,9 @@ namespace DyplomBooking2026.Data
         public DbSet<WishlistFolder> WishlistFolders { get; set; }
         public DbSet<WishlistItem> WishlistItems { get; set; }
         public DbSet<Review> Reviews { get; set; } = null!;
-        
+        public DbSet<Car> Cars { get; set; }
+        public DbSet<Excursion> Excursions { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

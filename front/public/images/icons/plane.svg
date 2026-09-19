@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120">
+  <defs>
+    <linearGradient id="wingL" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8EDBFF"/>
+      <stop offset="1" stop-color="#18A8FF"/>
+    </linearGradient>
+    <linearGradient id="wingR" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8EDBFF"/>
+      <stop offset="1" stop-color="#18A8FF"/>
+    </linearGradient>
+    <linearGradient id="center" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0C8FFF"/>
+      <stop offset="1" stop-color="#0067C5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- wings -->
+  <path d="M50 0 L5 94 Q4 98 9 96 L39 82 L50 0Z" fill="url(#wingL)"/>
+  <path d="M50 0 L95 94 Q96 98 91 96 L61 82 L50 0Z" fill="url(#wingR)"/>
+
+  <!-- inner folds -->
+  <path d="M50 0 L39 82 L50 112 Z" fill="#087BE0"/>
+  <path d="M50 0 L61 82 L50 112 Z" fill="url(#center)"/>
+
+  <!-- lower folded wings -->
+  <path d="M39 82 L16 94 L46 101 Z" fill="#075EB5"/>
+  <path d="M61 82 L84 94 L54 101 Z" fill="#096FD0"/>
+
+  <!-- center crease -->
+  <path d="M50 0 L50 112" fill="none" stroke="#005DB5" stroke-width="1.2" opacity=".55"/>
+</svg>

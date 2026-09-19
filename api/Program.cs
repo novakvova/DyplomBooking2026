@@ -247,8 +247,20 @@ builder.Services.AddScoped<PaymentService>();
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+app.UseStaticFiles();
+
 
 // ---- Database seed ----
+using (var scope = app.Services.CreateScope())
+{
+    var context =
+        scope.ServiceProvider
+        .GetRequiredService<ApplicationDbContext>();
+
+    await DbCarSeeder.SeedAsync(context);
+    await DbExcursionSeeder.SeedAsync(context);
+}
+
 using (var scope = app.Services.CreateScope())
 {
     var context =

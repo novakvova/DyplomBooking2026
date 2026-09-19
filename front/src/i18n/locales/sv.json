@@ -211,7 +211,8 @@
   "home": {
     "hero": {
       "title": "Vägen till din perfekta semester!",
-      "subtitle": "Hitta det perfekta boendet bland tusentals alternativ"
+      "subtitle": "Hitta det perfekta boendet bland tusentals alternativ",
+      "sectionComingSoon": "Den här sektionen är fortfarande under utveckling. Prova att söka hotell eller boende istället."
     },
     "search": {
       "where": "Vart?",

@@ -12,30 +12,30 @@ import useLocalizedPath from "../../hooks/useLocalizedPath";
 
 import WishlistModal from "../Wishlist/WishlistModal";
 import AuthModal from "../AuthModal/AuthModal";
+import StarRating from "./StarRating";
+import LikeButton from "./LikeButton";
 
 import type { Housing } from "../../types/housing";
 
 interface Props {
   housing: Housing;
   isFavorite?: boolean;
-  // Показати бейдж відсотка знижки поверх фото (секція "Гарячі знижки").
   discountPercent?: number;
 }
 
 /**
  * Картка житла для маркетингових секцій головної сторінки
  * (Гарячі знижки / Найкращі готелі сезону / Подорожі будь-якого
- * типу), стилізована згідно дизайну Figma: зірковий рейтинг,
- * бірюзовий бейдж ціни, кругла кнопка wishlist поверх фото.
+ * типу), стилізована згідно дизайну Figma.
  *
- * Це окремий компонент від HousingCard (каталог/список), бо
- * розмітка і акценти тут інші (зірки замість типу нерухомості,
- * ціна в бейджі замість підпису знизу) — переписувати HousingCard
- * під обидва стилі зробило б його складнішим для підтримки.
- * Логіка wishlist навмисно продубльована в спрощеному вигляді
- * (без папок при видаленні — тут завжди просте додавання/видалення
- * "в улюблені"), щоб не тягнути повний набір модалок папок на
- * головну сторінку.
+ * Ширина картки розрахована так, щоб рівно 4 картки поміщались в
+ * ряд на контейнері шириною ~1383px при gap 24px:
+ * (1383 - 3*24) / 4 ≈ 310px — звідси max-w-[310px] замість
+ * попереднього 327px, який залишав місце лише для трьох.
+ *
+ * Назва й зірки рейтингу розташовані одна під одною (а не в один
+ * рядок), щоб довгі назви житла не обрізались через тісноту з
+ * рейтингом праворуч.
  */
 const HomeSectionCard = ({ housing, isFavorite = false, discountPercent }: Props) => {
   const { t, i18n } = useTranslation();
@@ -46,6 +46,7 @@ const HomeSectionCard = ({ housing, isFavorite = false, discountPercent }: Props
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [authOpen, setAuthOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
+  const [liked, setLiked] = useState(isFavorite);
 
   const addMutation = useMutation({
     mutationFn: (folderIds: number[]) => wishlistApi.add(housing.id, folderIds),
@@ -76,24 +77,24 @@ const HomeSectionCard = ({ housing, isFavorite = false, discountPercent }: Props
 
     if (addMutation.isPending || removeMutation.isPending) return;
 
-    if (isFavorite) {
+    if (liked) {
+      setLiked(false);
       removeMutation.mutate();
     } else {
+      setLiked(true);
       setWishlistOpen(true);
     }
   };
 
   const price = convert(housing.pricePerNight).toLocaleString(i18n.language);
-  const rating = Math.round(housing.averageRating || 5);
 
   return (
     <>
       <Link
         to={localizedPath(`/housing/${housing.id}`)}
-        className="group flex w-full max-w-[327px] flex-col gap-4"
+        className="group flex w-full flex-col gap-4"
       >
-        {/* Фото */}
-        <div className="relative h-[280px] w-full overflow-hidden rounded-[20px] bg-gradient-to-br from-slate-200 to-slate-300">
+        <div className="relative h-[280px] w-full overflow-hidden rounded-[20px] bg-gradient-to-br from-slate-200 to-slate-300 transition-shadow duration-300 group-hover:shadow-xl">
           {housing.mainPhotoPath ? (
             <img
               src={getMediaUrl(housing.mainPhotoPath)}
@@ -112,46 +113,25 @@ const HomeSectionCard = ({ housing, isFavorite = false, discountPercent }: Props
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={handleWishlist}
+          <LikeButton
+            isFavorite={liked}
+            onToggle={handleWishlist}
             disabled={addMutation.isPending || removeMutation.isPending}
-            aria-label={
-              isFavorite
+            ariaLabel={
+              liked
                 ? t("housingCard.wishlist.remove")
                 : t("housingCard.wishlist.add")
             }
-            className="absolute right-4 top-4 flex h-[46px] w-[46px] items-center justify-center rounded-[20px] bg-white/10 backdrop-blur-sm disabled:opacity-60"
-          >
-            <span
-              className={`text-[22px] leading-none ${
-                isFavorite ? "text-red-500" : "text-white"
-              }`}
-            >
-              {isFavorite ? "♥" : "♡"}
-            </span>
-          </button>
+          />
         </div>
 
-        {/* Інфо */}
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-6">
-              <h3 className="line-clamp-1 text-[22px] font-medium leading-[1.25] text-black min-[1500px]:text-[30px]">
-                {housing.title}
-              </h3>
+          <div className="flex flex-col gap-1.5">
+            <h3 className="line-clamp-1 text-lg font-medium leading-[1.25] text-black transition-colors group-hover:text-[#4B9DA9] min-[1500px]:text-2xl">
+              {housing.title}
+            </h3>
 
-              <div className="flex shrink-0 items-center gap-0.5">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <span
-                    key={index}
-                    className={index < rating ? "text-[#FFC14D]" : "text-slate-200"}
-                  >
-                    ★
-                  </span>
-                ))}
-              </div>
-            </div>
+            <StarRating rating={housing.averageRating || 5} size={16} />
 
             <p className="text-[15px] font-medium text-[#414141] min-[1500px]:text-[17px]">
               {housing.city}
@@ -159,7 +139,7 @@ const HomeSectionCard = ({ housing, isFavorite = false, discountPercent }: Props
           </div>
 
           <div className="flex items-center justify-start">
-            <span className="flex h-10 items-center justify-center rounded-[10px] bg-[#4B9DA9] px-3 text-lg font-medium text-white">
+            <span className="flex h-10 items-center justify-center rounded-[10px] bg-[#4B9DA9] px-3 text-lg font-medium text-white transition-colors group-hover:bg-[#3d838d]">
               {currency.toUpperCase()} {price}
             </span>
           </div>

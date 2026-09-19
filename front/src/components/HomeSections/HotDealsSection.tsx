@@ -44,7 +44,7 @@ const HotDealsSection = ({ wishlist }: Props) => {
           ))}
         </div>
       ) : (
-        <div className="flex flex-wrap items-end gap-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {deals.map((housing) => (
             <HomeSectionCard
               key={housing.id}

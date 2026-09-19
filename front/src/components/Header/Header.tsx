@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useRef, useEffect, useState } from "react";
+import { usePlane } from "../../hooks/usePlaneContext";
+
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -18,6 +20,20 @@ import DropdownProfileModal, {
 const Header = () => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+
+  const logoRef = useRef<HTMLAnchorElement | null>(null);
+  const { setStartPosition } = usePlane();
+
+  useEffect(() => {
+    if (!logoRef.current) return;
+
+    const rect = logoRef.current.getBoundingClientRect();
+
+    setStartPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    });
+  }, [setStartPosition]);
 
   const localizedNavigate = useLocalizedNavigate();
   const localizedPath = useLocalizedPath();
@@ -131,6 +147,7 @@ const Header = () => {
             to={localizedPath()}
             className="flex items-center transition hover:opacity-85"
             aria-label="WayGo — на головну"
+            ref={logoRef}
           >
             <img
               src="/images/logos/WhiteLogo_WayGo.png"

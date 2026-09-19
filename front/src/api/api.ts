@@ -451,3 +451,49 @@ export const reviewApi = {
     return data;
   },
 };
+
+
+// ─────────────────────────────────────────────
+// CAR
+// ─────────────────────────────────────────────
+export const carApi = {
+  getAll: async(params?:any)=>{
+    const {data} =
+      await apiClient.get("/cars",{
+        params,
+        paramsSerializer:{
+          indexes:false,
+        },
+      });
+    return data;
+  },
+
+  getFilters: async()=>{
+    const {data} =
+      await apiClient.get("/cars/filters");
+    return data;
+  },
+};
+
+
+// ─────────────────────────────────────────────
+// EXCURSION
+// ─────────────────────────────────────────────
+export const excursionApi = {
+  getAll: async(params?:any)=>{
+    const {data} =
+      await apiClient.get("/excursions",{
+        params,
+        paramsSerializer:{
+          indexes:false,
+        },
+      });
+    return data;
+  },
+
+  getFilters: async()=>{
+    const {data} =
+      await apiClient.get("/excursions/filters");
+    return data;
+  },
+};

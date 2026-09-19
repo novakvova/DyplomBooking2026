@@ -21,6 +21,8 @@ import BookingPage from "./pages/BookingPage";
 import GoogleCallbackPage from "./pages/GoogleCallbackPage";
 import WishlistPage from "./pages/WishlistPage";
 import HousingListPage from "./pages/HousingListPage";
+import CarsListPage from "./pages/CarsListPage";
+import ExcursionsListPage from "./pages/ExcursionsListPage";
 import WishlistFolderPage from "./pages/WishlistFolderPage";
 
 // Housing registration
@@ -141,6 +143,9 @@ function App() {
               {/* Housing */}
               <Route path="housing" element={<HousingListPage />} />
               <Route path="housing/:id" element={<HousingDetailPage />} />
+
+              <Route path="cars" element={<CarsListPage />} />
+              <Route path="excursions" element={<ExcursionsListPage />} />
 
               {/* User */}
               <Route path="profile" element={<ProfilePage />} />

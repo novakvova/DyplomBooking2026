@@ -24,7 +24,9 @@ const HERO_NAV_ITEMS = [
   { key: "housing", label: "Будинки та апартаменти" },
   { key: "excursions", label: "Екскурсії" },
   { key: "transport", label: "Транспорт" },
-];
+] as const;
+
+type HeroNavKey = (typeof HERO_NAV_ITEMS)[number]["key"];
 
 const HomePage = () => {
   const { t } = useTranslation();
@@ -41,7 +43,7 @@ const HomePage = () => {
   const [openDates, setOpenDates] = useState(false);
   const [openGuests, setOpenGuests] = useState(false);
 
-  const [heroNav, setHeroNav] = useState("hotels");
+  const [heroNav, setHeroNav] = useState<HeroNavKey | null>("hotels");
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
 
   const [guests, setGuests] = useState({
@@ -55,7 +57,6 @@ const HomePage = () => {
   const destinationRef = useRef<HTMLDivElement>(null);
   const datesRef = useRef<HTMLDivElement>(null);
   const guestsRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [recentDestinations, setRecentDestinations] = useState<Destination[]>(() => {
     try {
@@ -80,6 +81,30 @@ const HomePage = () => {
     navigate("/housing", {
       state: cityName ? { city: cityName } : undefined,
     });
+  };
+
+  // Toggle: повторний клік по вже активній вкладці знімає виділення
+  // (heroNav стає null), інакше активною стає обрана вкладка.
+  const handleHeroNavClick = (key: HeroNavKey) => {
+    setHeroNav((current) => (current === key ? null : key));
+  };
+
+  // Перехід на сторінку каталогу відповідного розділу залежно від
+  // активної вкладки hero-навігації. Якщо активна вкладка — "Готелі"
+  // або "Будинки та апартаменти", то переходимо на /housing, якщо
+  // "Екскурсії" — на /excursions, якщо "Транспорт" — на /cars.
+  const goToSectionForActiveNav = (cityName?: string) => {
+    if (heroNav === "transport") {
+      navigate("/cars");
+      return;
+    }
+
+    if (heroNav === "excursions") {
+      navigate("/excursions");
+      return;
+    }
+
+    goToHousingList(cityName);
   };
 
   const { data: wishlist = [] } = useQuery<Housing[]>({
@@ -194,8 +219,9 @@ const HomePage = () => {
     setOpenDestination(false);
 
     // Результати пошуку тепер показуються на окремій сторінці
-    // каталогу, а не інлайн на головній.
-    goToHousingList(resolvedCity || undefined);
+    // каталогу (або відповідному розділу — залежно від активної
+    // вкладки hero-навігації), а не інлайн на головній.
+    goToSectionForActiveNav(resolvedCity || undefined);
   };
 
   useEffect(() => {
@@ -230,18 +256,6 @@ const HomePage = () => {
     };
   }, []);
 
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      dropdownRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [openDestination, openDates, openGuests]);
-
   return (
     <div>
       {/* ───────────────── HERO ───────────────── */}
@@ -272,23 +286,39 @@ const HomePage = () => {
               rounded-[20px] bg-white
             "
           >
-            {HERO_NAV_ITEMS.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => setHeroNav(item.key)}
-                className="
-                  flex h-[58px] items-center justify-center
-                  whitespace-nowrap bg-white px-2
-                  text-center text-[20px] font-medium
-                  leading-none tracking-normal
-                  text-[#243C4E]
-                  transition hover:bg-[#F5F7F8]
-                "
-              >
-                {item.label}
-              </button>
-            ))}
+            {HERO_NAV_ITEMS.map((item) => {
+              const isActive = heroNav === item.key;
+
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleHeroNavClick(item.key)}
+                  aria-pressed={isActive}
+                  className="
+                    group/nav flex h-[58px] items-center justify-center
+                    whitespace-nowrap bg-white px-2
+                    text-center text-[20px] font-medium
+                    leading-none tracking-normal
+                    text-[#243C4E]
+                    transition-colors hover:bg-[#F5F7F8]
+                  "
+                >
+                  <span
+                    className={`
+                      border-b-2 pb-0.5 transition-colors
+                      ${
+                        isActive
+                          ? "border-[#243C4E]"
+                          : "border-transparent group-hover/nav:border-[#243C4E]/50"
+                      }
+                    `}
+                  >
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* ───────── HERO TITLE ───────── */}
@@ -379,7 +409,6 @@ const HomePage = () => {
 
               {openDestination && (
                 <DestinationDropdown
-                  ref={dropdownRef}
                   destinations={dropdownDestinations}
                   recent={recentDestinations}
                   onSelect={handleDestinationSelect}
@@ -525,7 +554,7 @@ const HomePage = () => {
               </button>
 
               {openGuests && (
-                <GuestsDropdown ref={dropdownRef} guests={guests} setGuests={setGuests} />
+                <GuestsDropdown guests={guests} setGuests={setGuests} />
               )}
             </div>
 
@@ -570,14 +599,17 @@ const HomePage = () => {
       </section>
 
       {/* ─────────────── HOT DEALS ─────────────── */}
+
       <HotDealsSection wishlist={wishlist} />
 
       {/* ─────────────── PROMO BANNER ─────────────── */}
+
       <div className="py-4">
         <PromoBanner onBrowseClick={() => goToHousingList()} />
       </div>
 
       {/* ─────────────── POPULAR DESTINATIONS ─────────────── */}
+
       <PopularDestinationsSection
         onDestinationSelect={(destination) => {
           handleDestinationSelect(destination);
@@ -586,9 +618,11 @@ const HomePage = () => {
       />
 
       {/* ─────────────── TRAVEL CATEGORIES ─────────────── */}
+
       <TravelCategoriesSection wishlist={wishlist} />
 
       {/* ─────────────── SEASON BEST ─────────────── */}
+
       <SeasonBestSection wishlist={wishlist} />
 
       <Footer />

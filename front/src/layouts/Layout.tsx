@@ -1,6 +1,8 @@
 import { Outlet, useLocation } from "react-router-dom";
 
 import Header from "../components/Header/Header";
+import WayGoPlane from "../components/FlyingPlane/WayGoPlane";
+import { PlaneProvider} from "../hooks/usePlaneContext";
 
 const Layout = () => {
   const { pathname } = useLocation();
@@ -10,13 +12,18 @@ const Layout = () => {
     /^\/housing\/(create|register)(\/|$)/.test(pathname);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {!hideHeader && <Header />}
+    <PlaneProvider>
+      <div className="min-h-screen bg-gray-50">
 
-      <main>
-        <Outlet />
-      </main>
-    </div>
+        <WayGoPlane /> 
+
+        {!hideHeader && <Header />}
+
+        <main>
+          <Outlet />
+        </main>
+      </div>
+    </PlaneProvider>
   );
 };
 

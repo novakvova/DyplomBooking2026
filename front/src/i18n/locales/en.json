@@ -211,7 +211,8 @@
   "home": {
     "hero": {
       "title": "Your journey to the perfect stay!",
-      "subtitle": "Find the perfect place among thousands of options"
+      "subtitle": "Find the perfect place among thousands of options",
+      "sectionComingSoon": "This section is still in development. Try searching hotels or housing instead."
     },
     "search": {
       "where": "Where?",
